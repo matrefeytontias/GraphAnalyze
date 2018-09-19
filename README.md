@@ -1,4 +1,5 @@
 # GraphAnalyze
+
 Interactive function grapher and analyzer
 
 ### Building on Windows
