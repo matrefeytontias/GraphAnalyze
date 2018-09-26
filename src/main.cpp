@@ -14,6 +14,8 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "utils.h"
 
+#include <math.h>
+
 using namespace ImGui;
 
 void setupImGuiStyle();
@@ -78,6 +80,32 @@ int _main(int, char *argv[])
         ImGui_ImplGlfwGL3_NewFrame();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        if(ImGui::Button("open"))
+        {
+                //todo
+        }
+        ImGui::SameLine();
+        if(ImGui::Button("close"))
+        {
+                //todo
+        }
+        ImGui::Text("Bla");
+        float lines[10];
+        for (int i = 0;  i< 10; i++)
+            lines[i] = (float)(exp(i));
+        ImGui::PlotLines("graph",lines,10,0,NULL,FLT_MAX,FLT_MAX, ImVec2((ImGui::GetWindowWidth())*0.8, (ImGui::GetWindowHeight())/2),sizeof(float));
+
+        if(ImGui::Button("Tab1"))
+        {
+                //todo
+        }
+        ImGui::SameLine(0.0f,0.0f);
+        if(ImGui::Button("Tab2"))
+        {
+                //todo
+        }
+
 
         ImGui::Render();
         ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
