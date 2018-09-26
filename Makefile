@@ -1,6 +1,6 @@
 UNAME_S := $(shell uname -s)
 CC := gcc
-CFLAGS := -Iinclude -c -g -Wall -Wextra -Werror -Wno-int-in-bool-context -Wno-misleading-indentation -Wno-shift-negative-value
+CFLAGS := -Iinclude -Iinclude/mu -c -g -Wall -Wextra -Werror -Wno-int-in-bool-context -Wno-misleading-indentation -Wno-shift-negative-value -Wno-attributes -DMUPARSER_STATIC
 CPPFLAGS := -std=c++11
 ifeq ($(UNAME_S), Linux)
 	LDFLAGS := -lstdc++ -lm -lglfw

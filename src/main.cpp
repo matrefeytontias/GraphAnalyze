@@ -1,12 +1,17 @@
 #define GLFW_DLL
 // #define TINYGLTF_NOEXCEPTION // optional. disable exception handling.
 
+#include <cmath>
 #include <iostream>
+#include <numeric>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "imgui.h"
 #include "imgui_impl_glfw_gl3.h"
+#define SHARED 0
+#include "mu/muParser.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 // Define these only in *one* .cpp file.
@@ -14,6 +19,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "utils.h"
 
+using namespace std;
 using namespace ImGui;
 
 void setupImGuiStyle();
@@ -72,12 +78,64 @@ int _main(int, char *argv[])
     glViewport(0, 0, display_w, display_h);
 
     trace("Entering drawing loop");
-
+    
+    vector<double> xs, ys;
+    
+    try
+    {
+        string testExprString("x^2 + x + 1");
+        double x = 0.;
+        mu::Parser p;
+        
+        p.DefineVar("x", &x);
+        p.SetExpr(testExprString);
+        
+        for(x = -1.; x <= 1.; x += 0.01)
+        {
+            xs.push_back(x);
+            ys.push_back(p.Eval());
+        }
+    }
+    catch(mu::Parser::exception_type &e)
+    {
+        fatal("Error compiling expression : " << e.GetMsg());
+    }
+    
+    double minX = -1., maxX = 1.,
+        minY = std::accumulate(ys.begin(), ys.end(), ys[0], [](double a, double b) { return min(a, b); }),
+        maxY = std::accumulate(ys.begin(), ys.end(), ys[0], [](double a, double b) { return max(a, b); }),
+        rangeX = maxX - minX,
+        rangeY = maxY - minY,
+        rangeScreenX = 630,
+        rangeScreenY = 450;
+    auto scaleX = [minX, rangeX, rangeScreenX](double x) { return (x - minX) * rangeScreenX / rangeX; };
+    auto scaleY = [minY, rangeY, rangeScreenY](double y) { return (1. - (y - minY) / rangeY) * rangeScreenY; };
+    
     while (!glfwWindowShouldClose(window))
     {
         ImGui_ImplGlfwGL3_NewFrame();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
+        ImGui::SetNextWindowSize(ImVec2(640,480), ImGuiCond_FirstUseEver);
+        if(ImGui::Begin("Function graphing test", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse))
+        {
+            // Graph the function
+            ImDrawList *drawList = ImGui::GetWindowDrawList();
+            const float thickness = 2;
+            const ImVec4 col = ImVec4(1, 1, 1, 1);
+            const ImU32 col32 = ImColor(col);
+            const ImVec2 pen = ImGui::GetCursorScreenPos();
+            float x = pen.x, y = pen.y - 18;
+            
+            for(unsigned int k = 0; k < xs.size() - 1; k++)
+            {
+                drawList->AddLine(ImVec2(x + scaleX(xs[k]), y + scaleY(ys[k])),
+                    ImVec2(x + scaleX(xs[k + 1]), y + scaleY(ys[k + 1])),
+                    col32, thickness);
+            }
+        }
+        ImGui::End();
 
         ImGui::Render();
         ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
