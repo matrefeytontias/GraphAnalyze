@@ -80,42 +80,7 @@ int _main(int, char *argv[])
 
     trace("Entering drawing loop");
     
-    /*
-    vector<double> xs, ys;
-    
-    try
-    {
-        string testExprString("x^2 + x + 1");
-        double x = 0.;
-        mu::Parser p;
-        
-        p.DefineVar("x", &x);
-        p.SetExpr(testExprString);
-        
-        for(x = -1.; x <= 1.; x += 0.01)
-        {
-            xs.push_back(x);
-            ys.push_back(p.Eval());
-        }
-    }
-    catch(mu::Parser::exception_type &e)
-    {
-        fatal("Error compiling expression : " << e.GetMsg());
-    }
-    
-    double minX = -1., maxX = 1.,
-        minY = std::accumulate(ys.begin(), ys.end(), ys[0], [](double a, double b) { return min(a, b); }),
-        maxY = std::accumulate(ys.begin(), ys.end(), ys[0], [](double a, double b) { return max(a, b); }),
-        rangeX = maxX - minX,
-        rangeY = maxY - minY,
-        rangeScreenX = 630,
-        rangeScreenY = 450;
-    auto scaleX = [minX, rangeX, rangeScreenX](double x) { return (x - minX) * rangeScreenX / rangeX; };
-    auto scaleY = [minY, rangeY, rangeScreenY](double y) { return (1. - (y - minY) / rangeY) * rangeScreenY; };
-    
-    */
-    
-    initFunctionGrapher();
+    GraphAnalyze::GrapherModule grapher;
     
     while (!glfwWindowShouldClose(window))
     {
@@ -123,7 +88,7 @@ int _main(int, char *argv[])
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        functionGrapher();
+        grapher.render();
         
         ImGui::Render();
         ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
