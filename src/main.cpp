@@ -17,6 +17,7 @@
 // Define these only in *one* .cpp file.
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "modules.h"
 #include "utils.h"
 
 using namespace std;
@@ -79,6 +80,7 @@ int _main(int, char *argv[])
 
     trace("Entering drawing loop");
     
+    /*
     vector<double> xs, ys;
     
     try
@@ -111,32 +113,18 @@ int _main(int, char *argv[])
     auto scaleX = [minX, rangeX, rangeScreenX](double x) { return (x - minX) * rangeScreenX / rangeX; };
     auto scaleY = [minY, rangeY, rangeScreenY](double y) { return (1. - (y - minY) / rangeY) * rangeScreenY; };
     
+    */
+    
+    initFunctionGrapher();
+    
     while (!glfwWindowShouldClose(window))
     {
         ImGui_ImplGlfwGL3_NewFrame();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        ImGui::SetNextWindowSize(ImVec2(640,480), ImGuiCond_FirstUseEver);
-        if(ImGui::Begin("Function graphing test", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse))
-        {
-            // Graph the function
-            ImDrawList *drawList = ImGui::GetWindowDrawList();
-            const float thickness = 2;
-            const ImVec4 col = ImVec4(1, 1, 1, 1);
-            const ImU32 col32 = ImColor(col);
-            const ImVec2 pen = ImGui::GetCursorScreenPos();
-            float x = pen.x, y = pen.y - 18;
-            
-            for(unsigned int k = 0; k < xs.size() - 1; k++)
-            {
-                drawList->AddLine(ImVec2(x + scaleX(xs[k]), y + scaleY(ys[k])),
-                    ImVec2(x + scaleX(xs[k + 1]), y + scaleY(ys[k + 1])),
-                    col32, thickness);
-            }
-        }
-        ImGui::End();
-
+        functionGrapher();
+        
         ImGui::Render();
         ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
