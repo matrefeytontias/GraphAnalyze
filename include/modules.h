@@ -21,13 +21,13 @@ public:
     GrapherModule(int windowWidth = 640, int windowHeight = 480);
     virtual void render() override;
 private:
+    void evaluateFunction(double minX, double maxX);
     int w, h;
     mu::Parser p;
     std::vector<double> xs, ys;
     double x = 0.;
-    bool readyToGraph = false;
     bool invalidFunc = false;
-    char buf[MAX_FUNC_LENGTH] = "x^2 + x + 1";
+    char buf[MAX_FUNC_LENGTH] = "";
 };
 
 }
