@@ -35,7 +35,7 @@ typedef struct
         pos = ImGui::GetCursorScreenPos();
         size = ImGui::GetContentRegionAvail();
     }
-    void build(const std::vector<double> &xs, std::vector<double> &ys)
+    void build(const std::vector<float> &xs, std::vector<float> &ys)
     {
         static auto minComputer = [](double a, double b) { return std::min(a, b); };
         static auto maxComputer = [](double a, double b) { return std::max(a, b); };
@@ -65,18 +65,6 @@ GrapherModule::GrapherModule(int windowWidth, int windowHeight) : w(windowWidth)
         xs.push_back((k - 500.) / 500.);
 }
 
-/*
-bool ImGuiInputText(const char *label, char *buf, size_t bufSize, bool invalid = false)
-{
-    if(invalid)
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, 0xff0000ff);
-    bool textModified = ImGui::InputText(label, buf, bufSize);
-    if(invalid)
-        ImGui::PopStyleColor();
-    return textModified;
-}
-*/
-
 void GrapherModule::evaluateFunction(double minX, double maxX)
 {
     xs.clear();
@@ -98,44 +86,110 @@ void GrapherModule::render()
         ImGui::End();
         return;
     }
-    
-    ImGui::TextUnformatted("Domain definition");
-    static float minX = -1., maxX = 1.;
-    bool valueChanged = false;
-    float w = ImGui::GetWindowWidth();
-    ImGui::PushItemWidth(w / 2 - 32);
-        valueChanged |= invalidate(minX == maxX, ImGui::DragFloat("Min X", &minX, 0.1, -1e12, maxX)); ImGui::SameLine();
-    ImGui::PopItemWidth();
-    ImGui::PushItemWidth(-32);
-        valueChanged |= invalidate(minX == maxX, ImGui::DragFloat("Max X", &maxX, 0.1, minX, 1e12));
-    ImGui::PopItemWidth();
-    
-    if(invalidate(invalidFunc, ImGui::InputText(" = f(x)", buf, MAX_FUNC_LENGTH, invalidFunc)))
-        invalidFunc = false;
-    
-    if(ImGui::Button("Graph"))
+    float startPos = ImGui::GetWindowSize().x *0.4f;
+    ImGui::SetCursorPosX(startPos + 100);
+    ImGui::Text("General Tools");
+    ImGui::SetCursorPosX(startPos);
+    if(ImGui::Button("Open",ImVec2(50,30)))
     {
-        if(minX != maxX)
-        {
-            try
-            {
-                p.SetExpr(std::string(buf));
-                invalidFunc = false;
-                evaluateFunction(minX, maxX);
-                gi.build(xs, ys);
-                trace("Valid func");
-            }
-            catch(mu::Parser::exception_type &e)
-            {
-                invalidFunc = true;
-                gi.ready  = false;
-                trace("Invalid func");
-            }
-        }
+            //todo
     }
-    
+    ImGui::SameLine();
+    if(ImGui::Button("Close",ImVec2(50,30)))
+    {
+            //todo
+    }
+    ImGui::SameLine();
+    if(ImGui::Button("Undo",ImVec2(50,30)))
+    {
+            //todo
+    }
+    ImGui::SameLine();
+    if(ImGui::Button("Redo",ImVec2(50,30)))
+    {
+            //todo
+    }
     ImGui::Separator();
+    ImGui::NewLine();
+    ImGui::BeginGroup();
+        ImGui::Text("Mathematical Tools");
+        ImGui::NewLine();
+        if(ImGui::Button("op1",ImVec2(50,30)))
+        {
+                //todo
+        }
+        if(ImGui::Button("op2",ImVec2(50,30)))
+        {
+                //todo
+        }
+
+        if(ImGui::Button("op3",ImVec2(50,30)))
+        {
+                //todo
+        }
+    ImGui::EndGroup();
+    ImGui::SameLine();
+    ImGui::BeginGroup();
+        int startPosGraph = ImGui::GetCursorPosX();
+        static float minX = 0.0f, maxX = 10.0f;
+        ImGui::PushItemWidth(ImGui::GetWindowWidth() - startPosGraph - 20 - 100);
+            if(invalidate(invalidFunc, ImGui::InputText(" = f(x)", buf, MAX_FUNC_LENGTH, invalidFunc)))
+                invalidFunc = false;
+        ImGui::PopItemWidth();
+        ImGui::PushItemWidth((ImGui::GetWindowWidth() - startPosGraph - 20) / 3);
+            invalidate(minX == maxX, ImGui::DragFloat("Min X", &minX, 0.1f, -FLT_MAX, maxX));
+            ImGui::SameLine();
+            invalidate(minX == maxX, ImGui::DragFloat("Max X", &maxX, 0.1f, minX, FLT_MAX));
+            ImGui::SameLine();
+            if(ImGui::Button("Graph"))
+            {
+                if(minX != maxX)
+                {
+                    try
+                    {
+                        p.SetExpr(std::string(buf));
+                        invalidFunc = false;
+                        evaluateFunction(minX, maxX);
+                        gi.build(xs, ys);
+                        trace("Valid func");
+                    }
+                    catch(mu::Parser::exception_type &e)
+                    {
+                        invalidFunc = true;
+                        gi.ready  = false;
+                        trace("Invalid func");
+                    }
+                }
+            }
+        ImGui::PopItemWidth();
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+            ImGui::PlotLines("", &ys[0], ys.size(), 0, NULL, FLT_MAX, FLT_MAX,
+                ImVec2(ImGui::GetWindowWidth() - startPosGraph - 60,
+                    ImGui::GetWindowHeight() - ImGui::GetCursorPosY() - 100),
+                sizeof(float));
+            float tabSize = (ImGui::GetWindowWidth() - startPosGraph - 20) / 2 - 50;
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, .1f);
+                if(ImGui::Button("Tab1", ImVec2(tabSize, 30)))
+                {
+                        //todo
+                }
+                ImGui::SameLine();
+                if(ImGui::Button("Tab2", ImVec2(tabSize, 30)))
+                {
+                        //todo
+                }
+                ImGui::SameLine();
+                if(ImGui::Button("+", ImVec2(50, 30)))
+                {
+                        //todo
+                }
+            ImGui::PopStyleVar();
+        ImGui::PopStyleVar();
+    ImGui::EndGroup();
+    ImGui::End();
     
+    // Custom rendering code for later possibly
+    /*
     if(gi.ready)
     {
         gi.updateArea();
@@ -151,4 +205,5 @@ void GrapherModule::render()
         }
     }
     ImGui::End();
+    */
 }

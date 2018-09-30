@@ -24,7 +24,8 @@ private:
     void evaluateFunction(double minX, double maxX);
     int w, h;
     mu::Parser p;
-    std::vector<double> xs, ys;
+    // TODO : move this back to double
+    std::vector<float> xs, ys;
     double x = 0.;
     bool invalidFunc = false;
     char buf[MAX_FUNC_LENGTH] = "";
