@@ -1,7 +1,9 @@
 #include "modules.h"
 
 #include <algorithm>
+#include <iomanip>
 #include <numeric>
+#include <sstream>
 #include <vector>
 
 #include "imgui.h"
@@ -28,7 +30,7 @@ using namespace GraphAnalyze;
 typedef struct
 {
     ImVec2 pos, size;
-    double minX, maxX, minY, maxY;
+    double minX = -1., maxX = 1., minY, maxY;
     bool ready = false;
     /**
      * Sets the drawing area. If width and height aren't provided, use all of the
@@ -89,6 +91,15 @@ void GrapherModule::evaluateFunction(double minX, double maxX)
     }
 }
 
+std::string toString(double v, int precision = 0)
+{
+    std::ostringstream sstream;
+    if(precision > 0)
+        sstream << std::setprecision(precision);
+    sstream << v;
+    return sstream.str();
+}
+
 /**
  * Draws the built function using the current graph info.
  */
@@ -99,9 +110,48 @@ void GrapherModule::plotFunction(int w, int h)
     ImVec2 top = gi.pos, bot(gi.pos.x + gi.size.x + 1, gi.pos.y + gi.size.y + 1);
     drawList->AddRectFilled(top, bot, 0xffffffff);
     ImGui::PushClipRect(top, bot, true);
-        const float thickness = 1;
-        const ImU32 col32 = 0xff000000;
+        double xrange = gi.maxX - gi.minX,
+            yrange = gi.maxY - gi.minY;
+        std::string s = toString((gi.minX + gi.maxX) / 2);
+        // Draw the axis system
+        float thickness = 1;
+        ImU32 col32 = 0xff888888;
+        drawList->AddLine(ImVec2(top.x + w / 2, top.y), ImVec2(top.x + w / 2, top.y + h), col32, 1);
+        drawList->AddLine(ImVec2(top.x, top.y + h / 2), ImVec2(top.x + w, top.y + h / 2), col32, 1);
         
+        // Draw the X axis' ticks
+        int nbTicks = (w / (int)ImGui::CalcTextSize("0.00000").x) & ~1;
+        int ticky = top.y + h / 2 - 5;
+        for(int k = 0; k <= nbTicks; k++)
+        {
+            if(k != nbTicks / 2)
+            {
+                int x = top.x + w * k / nbTicks;
+                drawList->AddLine(ImVec2(x, ticky), ImVec2(x, ticky + 10), col32, 1);
+                std::string s = toString(gi.minX + xrange * k / nbTicks, 2);
+                drawList->AddText(ImVec2(x - ImGui::CalcTextSize(s.c_str()).x / 2, ticky + 10), col32, s.c_str());
+            }
+        }
+        
+        // Draw the Y axis' ticks
+        if(yrange > 0)
+        {
+            nbTicks = (h / (int)ImGui::CalcTextSize("0.000").x) & ~1;
+            int tickx = top.x + w / 2 - 5;
+            for(int k = 0; k <= nbTicks; k++)
+            {
+                if(k != nbTicks / 2)
+                {
+                    int y = bot.y - h * k / nbTicks;
+                    drawList->AddLine(ImVec2(tickx, y), ImVec2(tickx + 10, y), col32, 1);
+                    std::string s = toString(gi.minY + yrange * k / nbTicks, 2);
+                    drawList->AddText(ImVec2(tickx + 7, y), col32, s.c_str());
+                }
+            }
+        }
+        
+        // Plot the actual function
+        col32 = 0xff000000;
         for(unsigned int k = 0; k + 1 < ys.size(); k++)
         {
             drawList->AddLine(gi.scale(xs[k], ys[k]), gi.scale(xs[k + 1], ys[k + 1]),
@@ -116,6 +166,7 @@ void GrapherModule::plotFunction(int w, int h)
 void GrapherModule::render()
 {
     const ImVec2 buttonSize = ImVec2(50, 30);
+    static float minX = -1.f, maxX = 1.f;
     
     ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_FirstUseEver);
     if(!ImGui::Begin("Function graphing test", nullptr))
@@ -176,7 +227,7 @@ void GrapherModule::render()
     ImGui::SameLine();
     ImGui::BeginGroup();
         int startPosGraph = ImGui::GetCursorPosX();
-        static float minX = 0.0f, maxX = 10.0f;
+        
         ImGui::PushItemWidth(windowW - startPosGraph - hSpacing * 2 - ImGui::CalcTextSize(" = f(x)").x);
             if(invalidate(invalidFunc, ImGui::InputText(" = f(x)", buf, MAX_FUNC_LENGTH)))
                 invalidFunc = false;
