@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include "imgui.h"
 #include "mu/muParser.h"
 
 namespace GraphAnalyze
@@ -22,6 +23,7 @@ public:
     virtual void render() override;
 private:
     void evaluateFunction(double minX, double maxX);
+    void plotFunction(int w, int h);
     int w, h;
     mu::Parser p;
     // TODO : move this back to double

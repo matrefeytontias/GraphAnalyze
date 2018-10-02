@@ -56,6 +56,8 @@ typedef struct
     }
 } GraphInfo;
 
+static GraphInfo gi;
+
 GrapherModule::GrapherModule(int windowWidth, int windowHeight) : w(windowWidth), h(windowHeight)
 {
     p.DefineVar("x", &x);
@@ -76,38 +78,44 @@ void GrapherModule::evaluateFunction(double minX, double maxX)
     }
 }
 
+void GrapherModule::plotFunction(int w, int h)
+{
+    ImGui::PlotLines("", &ys[0], ys.size(), 0, NULL, FLT_MAX, FLT_MAX, ImVec2(w, h), sizeof(float));
+}
+
 void GrapherModule::render()
 {
-    static GraphInfo gi;
-    
     ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_FirstUseEver);
     if(!ImGui::Begin("Function graphing test", nullptr))
     {
         ImGui::End();
         return;
     }
-    float startPos = ImGui::GetWindowSize().x *0.4f;
-    ImGui::SetCursorPosX(startPos + 100);
-    ImGui::Text("General Tools");
+    
+    float startPos = (ImGui::GetWindowSize().x - ImGui::CalcTextSize("General Tools").x) / 2;
     ImGui::SetCursorPosX(startPos);
+    
+    ImGui::Text("General Tools");
+    
+    ImGui::SetCursorPosX((ImGui::GetWindowSize().x - (50 * 4 + ImGui::GetStyle().ItemSpacing.x * 3)) / 2);
     if(ImGui::Button("Open",ImVec2(50,30)))
     {
-            //todo
+        //todo
     }
     ImGui::SameLine();
     if(ImGui::Button("Close",ImVec2(50,30)))
     {
-            //todo
+        //todo
     }
     ImGui::SameLine();
     if(ImGui::Button("Undo",ImVec2(50,30)))
     {
-            //todo
+        //todo
     }
     ImGui::SameLine();
     if(ImGui::Button("Redo",ImVec2(50,30)))
     {
-            //todo
+        //todo
     }
     ImGui::Separator();
     ImGui::NewLine();
@@ -116,16 +124,16 @@ void GrapherModule::render()
         ImGui::NewLine();
         if(ImGui::Button("op1",ImVec2(50,30)))
         {
-                //todo
+            //todo
         }
         if(ImGui::Button("op2",ImVec2(50,30)))
         {
-                //todo
+            //todo
         }
 
         if(ImGui::Button("op3",ImVec2(50,30)))
         {
-                //todo
+            //todo
         }
     ImGui::EndGroup();
     ImGui::SameLine();
@@ -133,7 +141,7 @@ void GrapherModule::render()
         int startPosGraph = ImGui::GetCursorPosX();
         static float minX = 0.0f, maxX = 10.0f;
         ImGui::PushItemWidth(ImGui::GetWindowWidth() - startPosGraph - 20 - 100);
-            if(invalidate(invalidFunc, ImGui::InputText(" = f(x)", buf, MAX_FUNC_LENGTH, invalidFunc)))
+            if(invalidate(invalidFunc, ImGui::InputText(" = f(x)", buf, MAX_FUNC_LENGTH)))
                 invalidFunc = false;
         ImGui::PopItemWidth();
         ImGui::PushItemWidth((ImGui::GetWindowWidth() - startPosGraph - 20) / 3);
@@ -141,47 +149,42 @@ void GrapherModule::render()
             ImGui::SameLine();
             invalidate(minX == maxX, ImGui::DragFloat("Max X", &maxX, 0.1f, minX, FLT_MAX));
             ImGui::SameLine();
-            if(ImGui::Button("Graph"))
+            if(minX != maxX && ImGui::Button("Graph"))
             {
-                if(minX != maxX)
+                try
                 {
-                    try
-                    {
-                        p.SetExpr(std::string(buf));
-                        invalidFunc = false;
-                        evaluateFunction(minX, maxX);
-                        gi.build(xs, ys);
-                        trace("Valid func");
-                    }
-                    catch(mu::Parser::exception_type &e)
-                    {
-                        invalidFunc = true;
-                        gi.ready  = false;
-                        trace("Invalid func");
-                    }
+                    p.SetExpr(std::string(buf));
+                    invalidFunc = false;
+                    evaluateFunction(minX, maxX);
+                    gi.build(xs, ys);
+                    trace("Valid func");
+                }
+                catch(mu::Parser::exception_type &e)
+                {
+                    invalidFunc = true;
+                    gi.ready  = false;
+                    trace("Invalid func");
                 }
             }
         ImGui::PopItemWidth();
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
-            ImGui::PlotLines("", &ys[0], ys.size(), 0, NULL, FLT_MAX, FLT_MAX,
-                ImVec2(ImGui::GetWindowWidth() - startPosGraph - 60,
-                    ImGui::GetWindowHeight() - ImGui::GetCursorPosY() - 100),
-                sizeof(float));
+            plotFunction(ImGui::GetWindowWidth() - startPosGraph - 60,
+                ImGui::GetWindowHeight() - ImGui::GetCursorPosY() - 100);
             float tabSize = (ImGui::GetWindowWidth() - startPosGraph - 20) / 2 - 50;
             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, .1f);
                 if(ImGui::Button("Tab1", ImVec2(tabSize, 30)))
                 {
-                        //todo
+                    //todo
                 }
                 ImGui::SameLine();
                 if(ImGui::Button("Tab2", ImVec2(tabSize, 30)))
                 {
-                        //todo
+                    //todo
                 }
                 ImGui::SameLine();
                 if(ImGui::Button("+", ImVec2(50, 30)))
                 {
-                        //todo
+                    //todo
                 }
             ImGui::PopStyleVar();
         ImGui::PopStyleVar();
