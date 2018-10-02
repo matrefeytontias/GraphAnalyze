@@ -177,7 +177,7 @@ void GrapherModule::render()
     ImGui::BeginGroup();
         int startPosGraph = ImGui::GetCursorPosX();
         static float minX = 0.0f, maxX = 10.0f;
-        ImGui::PushItemWidth(windowW - startPosGraph - 20 - 100);
+        ImGui::PushItemWidth(windowW - startPosGraph - hSpacing * 2 - ImGui::CalcTextSize(" = f(x)").x);
             if(invalidate(invalidFunc, ImGui::InputText(" = f(x)", buf, MAX_FUNC_LENGTH)))
                 invalidFunc = false;
         ImGui::PopItemWidth();
