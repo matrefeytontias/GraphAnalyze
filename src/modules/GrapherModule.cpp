@@ -30,11 +30,19 @@ typedef struct
     ImVec2 pos, size;
     double minX, maxX, minY, maxY;
     bool ready = false;
-    void updateArea()
+    /**
+     * Sets the drawing area. If width and height aren't provided, use all of the
+     * available space.
+     */
+    void updateArea(int w = -1, int h = -1)
     {
         pos = ImGui::GetCursorScreenPos();
-        size = ImGui::GetContentRegionAvail();
+        size = w < 0 || h < 0 ? ImGui::GetContentRegionAvail() : ImVec2(w, h);
     }
+    
+    /**
+     * Builds the graph info from arrays of X and Y.
+     */
     void build(const std::vector<float> &xs, std::vector<float> &ys)
     {
         static auto minComputer = [](double a, double b) { return std::min(a, b); };
@@ -67,6 +75,9 @@ GrapherModule::GrapherModule(int windowWidth, int windowHeight) : w(windowWidth)
         xs.push_back((k - 500.) / 500.);
 }
 
+/**
+ * Builds the arrays of X and Y from a minX and a maxX.
+ */
 void GrapherModule::evaluateFunction(double minX, double maxX)
 {
     xs.clear();
@@ -78,13 +89,34 @@ void GrapherModule::evaluateFunction(double minX, double maxX)
     }
 }
 
+/**
+ * Draws the built function using the current graph info.
+ */
 void GrapherModule::plotFunction(int w, int h)
 {
-    ImGui::PlotLines("", &ys[0], ys.size(), 0, NULL, FLT_MAX, FLT_MAX, ImVec2(w, h), sizeof(float));
+    gi.updateArea(w, h);
+    ImDrawList *drawList = ImGui::GetWindowDrawList();
+    ImVec2 top = gi.pos, bot(gi.pos.x + gi.size.x + 1, gi.pos.y + gi.size.y + 1);
+    drawList->AddRectFilled(top, bot, 0xffffffff);
+    ImGui::PushClipRect(top, bot, true);
+        const float thickness = 1;
+        const ImU32 col32 = 0xff000000;
+        
+        for(unsigned int k = 0; k + 1 < ys.size(); k++)
+        {
+            drawList->AddLine(gi.scale(xs[k], ys[k]), gi.scale(xs[k + 1], ys[k + 1]),
+                col32, thickness);
+        }
+    ImGui::PopClipRect();
 }
 
+/**
+ * Renders the module.
+ */
 void GrapherModule::render()
 {
+    const ImVec2 buttonSize = ImVec2(50, 30);
+    
     ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_FirstUseEver);
     if(!ImGui::Begin("Function graphing test", nullptr))
     {
@@ -92,28 +124,33 @@ void GrapherModule::render()
         return;
     }
     
-    float startPos = (ImGui::GetWindowSize().x - ImGui::CalcTextSize("General Tools").x) / 2;
+    const int hSpacing = ImGui::GetStyle().ItemSpacing.x,
+        vSpacing = ImGui::GetStyle().ItemSpacing.y,
+        windowW = ImGui::GetWindowWidth(),
+        windowH = ImGui::GetWindowHeight();
+    
+    float startPos = (windowW - ImGui::CalcTextSize("General Tools").x) / 2;
     ImGui::SetCursorPosX(startPos);
     
     ImGui::Text("General Tools");
     
-    ImGui::SetCursorPosX((ImGui::GetWindowSize().x - (50 * 4 + ImGui::GetStyle().ItemSpacing.x * 3)) / 2);
-    if(ImGui::Button("Open",ImVec2(50,30)))
+    ImGui::SetCursorPosX((windowW - (buttonSize.x * 4 + hSpacing * 3)) / 2);
+    if(ImGui::Button("Open", buttonSize))
     {
         //todo
     }
     ImGui::SameLine();
-    if(ImGui::Button("Close",ImVec2(50,30)))
+    if(ImGui::Button("Close", buttonSize))
     {
         //todo
     }
     ImGui::SameLine();
-    if(ImGui::Button("Undo",ImVec2(50,30)))
+    if(ImGui::Button("Undo", buttonSize))
     {
         //todo
     }
     ImGui::SameLine();
-    if(ImGui::Button("Redo",ImVec2(50,30)))
+    if(ImGui::Button("Redo", buttonSize))
     {
         //todo
     }
@@ -122,16 +159,16 @@ void GrapherModule::render()
     ImGui::BeginGroup();
         ImGui::Text("Mathematical Tools");
         ImGui::NewLine();
-        if(ImGui::Button("op1",ImVec2(50,30)))
+        if(ImGui::Button("op1", buttonSize))
         {
             //todo
         }
-        if(ImGui::Button("op2",ImVec2(50,30)))
+        if(ImGui::Button("op2", buttonSize))
         {
             //todo
         }
 
-        if(ImGui::Button("op3",ImVec2(50,30)))
+        if(ImGui::Button("op3", buttonSize))
         {
             //todo
         }
@@ -140,11 +177,11 @@ void GrapherModule::render()
     ImGui::BeginGroup();
         int startPosGraph = ImGui::GetCursorPosX();
         static float minX = 0.0f, maxX = 10.0f;
-        ImGui::PushItemWidth(ImGui::GetWindowWidth() - startPosGraph - 20 - 100);
+        ImGui::PushItemWidth(windowW - startPosGraph - 20 - 100);
             if(invalidate(invalidFunc, ImGui::InputText(" = f(x)", buf, MAX_FUNC_LENGTH)))
                 invalidFunc = false;
         ImGui::PopItemWidth();
-        ImGui::PushItemWidth((ImGui::GetWindowWidth() - startPosGraph - 20) / 3);
+        ImGui::PushItemWidth((windowW - startPosGraph - 20) / 3);
             invalidate(minX == maxX, ImGui::DragFloat("Min X", &minX, 0.1f, -FLT_MAX, maxX));
             ImGui::SameLine();
             invalidate(minX == maxX, ImGui::DragFloat("Max X", &maxX, 0.1f, minX, FLT_MAX));
@@ -167,10 +204,12 @@ void GrapherModule::render()
                 }
             }
         ImGui::PopItemWidth();
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
-            plotFunction(ImGui::GetWindowWidth() - startPosGraph - 60,
-                ImGui::GetWindowHeight() - ImGui::GetCursorPosY() - 100);
-            float tabSize = (ImGui::GetWindowWidth() - startPosGraph - 20) / 2 - 50;
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.f);
+            int bottomY = windowH - buttonSize.y - vSpacing * 2;
+            plotFunction(windowW - startPosGraph - hSpacing,
+                bottomY - ImGui::GetCursorPosY() - vSpacing);
+            ImGui::SetCursorPosY(bottomY);
+            float tabSize = (windowW - startPosGraph - 20) / 2 - 50;
             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, .1f);
                 if(ImGui::Button("Tab1", ImVec2(tabSize, 30)))
                 {
@@ -182,7 +221,7 @@ void GrapherModule::render()
                     //todo
                 }
                 ImGui::SameLine();
-                if(ImGui::Button("+", ImVec2(50, 30)))
+                if(ImGui::Button("+", buttonSize))
                 {
                     //todo
                 }
