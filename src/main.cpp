@@ -24,7 +24,7 @@ using namespace std;
 using namespace ImGui;
 
 void setupImGuiStyle();
-void menu(int *state);
+void menu(bool state[]);
 
 static void glfw_error_callback(int error, const char *description)
 {
@@ -83,18 +83,22 @@ int _main(int, char *argv[])
 
     GraphAnalyze::GrapherModule grapher;
 
-    int state = -1;
+    bool state[] = {false,false,false,false};
+    string name[] = {"module1","module2","module3","module4"};
     while (!glfwWindowShouldClose(window))
     {
         ImGui_ImplGlfwGL3_NewFrame();
-
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if(state == -1)
-            menu(&state);
-        else
+        menu(state);
+        if(state[0])
             grapher.render();
-
+        if(state[1])
+            grapher.render();
+        if(state[2])
+            grapher.render();
+        if(state[3])
+            grapher.render();
         ImGui::Render();
         ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
@@ -111,13 +115,14 @@ int _main(int, char *argv[])
     return 0;
 }
 
-void menu(int *state){
-        float w = ImGui::GetWindowWidth();
-        ImGui::SetCursorPosX((w - ImGui::CalcTextSize("Welcome").x)/2);
+void menu(bool state[]){
+        ImGui::Begin("module");
+        ImVec2 windowSize = ImGui::GetWindowSize();
+        ImGui::SetCursorPosX((windowSize.x - ImGui::CalcTextSize("Welcome").x)/2);
         ImGui::Text("Welcome");
         ImVec2 sizeButton = ImVec2(50,30);
-        int spacing = ImGui::GetStyle().ItemSpacing.x;
-        ImGui::SetCursorPosX((w - sizeButton.x *2 -spacing)/2);
+        ImVec2 spacing = ImGui::GetStyle().ItemSpacing;
+        ImGui::SetCursorPosX((windowSize.x - sizeButton.x *2 -spacing.x)/2);
 
         if(ImGui::Button("Open",sizeButton)){
 
@@ -126,36 +131,40 @@ void menu(int *state){
         if(ImGui::Button("Exit",sizeButton)){
             exit(0);
         }
+        ImGui::Separator();
         ImGui::NewLine();
-        ImVec2 sizeButtonModule = ImVec2(w/10,w/10);
-        ImGui::SetCursorPosX((w - sizeButtonModule.x *2 - spacing)/2);
+        ImVec2 textSize = ImGui::CalcTextSize("Plot Graph and show \n information about it");
+        ImGui::SetCursorPosX((windowSize.x - textSize.x *2 - spacing.x)/2);
+        ImVec2 sizeButtonModule = ImVec2(textSize.x,windowSize.y/10);
+        ImGui::SetCursorPosY((windowSize.y - sizeButtonModule.y * 2 - textSize.y*2 - spacing.y * 3)/2);
         ImGui::BeginGroup();  //module list begin
             ImGui::BeginGroup(); //first column
                 ImGui::BeginGroup(); //first module
-                    if(ImGui::Button("Module1",sizeButtonModule))
-                        *state=1;
-                    ImGui::Text("Description module1");
+                    if(ImGui::Button("Graph",sizeButtonModule))
+                        state[0] = true;
+                    ImGui::Text("Plot Graph and show \n information about it");
                 ImGui::EndGroup(); //end first module
                 ImGui::BeginGroup(); //second module
                     if(ImGui::Button("Module2",sizeButtonModule))
-                        *state=1;
-                    ImGui::Text("Description module2");
+                        state[1]=true;
+                    ImGui::Text("Description module2 \n ...");
                 ImGui::EndGroup(); //end second module
             ImGui::EndGroup();  //End first column
             ImGui::SameLine();
             ImGui::BeginGroup(); //2nd column
                 ImGui::BeginGroup(); //first module
                     if(ImGui::Button("Module3",sizeButtonModule))
-                        *state=1;
-                    ImGui::Text("Description module3");
+                        state[2]=true;
+                    ImGui::Text("Description module3 \n ...");
                 ImGui::EndGroup(); //end first module
                 ImGui::BeginGroup(); //second module
                     if(ImGui::Button("Module4",sizeButtonModule))
-                        *state=1;
-                    ImGui::Text("Description module4");
+                        state[3]=true;
+                    ImGui::Text("Description module4 \n ...");
                 ImGui::EndGroup(); //end second module
             ImGui::EndGroup();  //End 2nd column
         ImGui::EndGroup(); //module list end
+    ImGui::End();
 }
 
 int main(int argc, char *argv[])
@@ -186,6 +195,7 @@ void setupImGuiStyle()
 
     style->WindowPadding = ImVec2(15, 15);
     style->WindowRounding = 5.0f;
+    style->WindowMinSize = ImVec2(500,400);
     style->FramePadding = ImVec2(5, 5);
     style->FrameRounding = 4.0f;
     style->ItemSpacing = ImVec2(12, 8);
@@ -198,10 +208,10 @@ void setupImGuiStyle()
 
     style->Colors[ImGuiCol_Text] = ImVec4(0.20f, 0.19f, 0.19f, 1.00f);
     style->Colors[ImGuiCol_TextDisabled] = ImVec4(0.40f, 0.39f, 0.38f, 0.77f);
-    style->Colors[ImGuiCol_WindowBg] = ImVec4(0.92f, 0.91f, 0.88f, 0.70f);
+    style->Colors[ImGuiCol_WindowBg] = ImVec4(0.8f, 0.8f, 0.8f, 1.00f);
     style->Colors[ImGuiCol_ChildWindowBg] = ImVec4(1.00f, 0.98f, 0.95f, 0.58f);
     style->Colors[ImGuiCol_PopupBg] = ImVec4(0.92f, 0.91f, 0.88f, 0.92f);
-    style->Colors[ImGuiCol_Border] = ImVec4(0.84f, 0.83f, 0.80f, 0.65f);
+    style->Colors[ImGuiCol_Border] = ImVec4(0.0f, 0.0f, 0.0f, 1.f);
     style->Colors[ImGuiCol_BorderShadow] = ImVec4(0.92f, 0.91f, 0.88f, 0.00f);
     style->Colors[ImGuiCol_FrameBg] = ImVec4(1.00f, 0.98f, 0.95f, 1.00f);
     style->Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.99f, 1.00f, 0.40f, 0.78f);
