@@ -176,6 +176,10 @@ void GrapherModule::plotFunction(int w, int h)
     }
 }
 
+/**
+ * Plots the tangent to the function at the position of the mouse.
+ * /!\ This needs the invisible button over the graph area to be the last drawn widget.
+ */
 void GrapherModule::plotTangent(float length)
 {
     if(ImGui::IsItemHovered())
@@ -196,6 +200,29 @@ void GrapherModule::plotTangent(float length)
         drawList->AddLine(ImVec2(origin.x - df.x * length, origin.y - df.y * length),
             ImVec2(origin.x + df.x * length, origin.y + df.y * length), 0xff0000ff,
             4);
+        
+        // Add orthonormal view of the tangent
+        df = ImVec2(xs[index + 1] - xs[index], ys[index + 1] - ys[index]);
+        l = sqrt(df.x * df.x + df.y * df.y);
+        df.x /= l; df.y /= l;
+        
+        ImVec2 textSize = ImGui::CalcTextSize("Orthonormal");
+        ImVec2 boxBase(gi.pos.x + gi.size.x - textSize.x - 3, 0);
+        boxBase.y = origin.x + length > boxBase.x && origin.y < gi.pos.y + gi.size.y / 2
+            ? gi.pos.y + gi.size.y - textSize.x - 1 : gi.pos.y - 1;
+        drawList->AddRectFilled(ImVec2(boxBase.x, boxBase.y),
+            ImVec2(boxBase.x + textSize.x + 3, boxBase.y + textSize.x + 2),
+            0xff000000);
+        drawList->AddRectFilled(ImVec2(boxBase.x + 1, boxBase.y + 1),
+            ImVec2(boxBase.x + textSize.x + 2, boxBase.y + textSize.x + 1),
+            0xffffffff);
+        
+        drawList->AddText(ImVec2(boxBase.x + 1, boxBase.y + 1), 0xff000000, "Orthonormal");
+        float orthoLen = (textSize.x - textSize.y) / 2;
+        
+        ImVec2 orthoBase(boxBase.x + textSize.x / 2, boxBase.y + textSize.y + orthoLen);
+        drawList->AddLine(ImVec2(orthoBase.x - df.x * orthoLen, orthoBase.y + df.y * orthoLen),
+            ImVec2(orthoBase.x + df.x * orthoLen, orthoBase.y - df.y * orthoLen), 0xff0000ff, 4);
     }
 }
 
@@ -300,6 +327,7 @@ void GrapherModule::render()
             {
                 ImGui::PushClipRect(gi.pos, ImVec2(gi.pos.x + gi.size.x, gi.pos.y + gi.size.y), true);
                     plotFunction(plotSize.x, plotSize.y);
+                    // /!\ Obligatory invisible button right before the tangent
                     ImGui::InvisibleButton("PlotArea", plotSize);
                     if(displayTangents)
                         plotTangent();
