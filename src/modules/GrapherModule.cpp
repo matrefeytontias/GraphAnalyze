@@ -7,18 +7,34 @@
 #include <vector>
 
 #include "imgui.h"
-#include "mu/muParser.h"
 #include "utils.h"
+#include "GLFW/glfw3.h"
+#include "mu/muParser.h"
 
 /**
- * Makes an ImGui call with a red background if a flag is set.
+ * Makes an ImGui call with a colored background if a flag is set.
  * Uses GCC's non-standard statement expression extension.
  */
-#define invalidate(flag, call) \
+#define flashWidget(flag, color, call) \
 ({\
     bool f = flag;\
     if(f)\
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, 0xff0000ff);\
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, color);\
+    bool textModified = call;\
+    if(f)\
+        ImGui::PopStyleColor();\
+    textModified;\
+})
+
+/**
+ * Makes an ImGui call with a colored button color if a flag is set.
+ * Uses GCC's non-standard statement expression extension.
+ */
+#define flashButtonWidget(flag, color, call) \
+({\
+    bool f = flag;\
+    if(f)\
+        ImGui::PushStyleColor(ImGuiCol_Button, color);\
     bool textModified = call;\
     if(f)\
         ImGui::PopStyleColor();\
@@ -297,6 +313,28 @@ bool GrapherModule::userSelectArea(float *startX, float *endX, bool allowOverlap
     return false;
 }
 
+inline float lerp(float a, float b, float v)
+{
+    return (b - a) * v + a;
+}
+
+ImVec4 vlerp(ImVec4 a, ImVec4 b, float v)
+{
+    return ImVec4(lerp(a.x, b.x, v), lerp(a.y, b.y, v), lerp(a.z, b.z, v),
+        lerp(a.w, b.w, v));
+}
+
+inline ImU32 clerp(ImVec4 &a, ImVec4 &b, float v)
+{
+    ImVec4 ha, hb;
+    ImGui::ColorConvertRGBtoHSV(a.x, a.y, a.z, ha.x, ha.y, ha.z);
+    ImGui::ColorConvertRGBtoHSV(b.x, b.y, b.z, hb.x, hb.y, hb.z);
+    ha = vlerp(ha, hb, v);
+    ImGui::ColorConvertHSVtoRGB(ha.x, ha.y, ha.z, ha.x, ha.y, ha.z);
+    ha.w = lerp(a.w, b.w, v);
+    return ImGui::ColorConvertFloat4ToU32(ha);
+}
+
 /**
  * Renders the module.
  */
@@ -361,18 +399,26 @@ void GrapherModule::render()
     ImGui::SameLine();
     ImGui::BeginGroup();
         int startPosGraph = ImGui::GetCursorPosX();
+        static bool valueChanged = false;
         
         ImGui::PushItemWidth(windowW - startPosGraph - hSpacing * 2 - ImGui::CalcTextSize(" = f(x)").x);
-            if(invalidate(invalidFunc, ImGui::InputText(" = f(x)", buf, MAX_FUNC_LENGTH)))
+            if(valueChanged |= flashWidget(invalidFunc, 0xff0000ff, ImGui::InputText(" = f(x)", buf, MAX_FUNC_LENGTH)))
                 invalidFunc = false;
         ImGui::PopItemWidth();
         ImGui::PushItemWidth((windowW - startPosGraph - 20) / 3);
-            invalidate(minX == maxX, ImGui::DragFloat("Min X", &minX, 0.1f, -FLT_MAX, maxX));
+            valueChanged |= flashWidget(minX >= maxX, 0xff0000ff, ImGui::DragFloat("Min X", &minX, 0.1f, -FLT_MAX, maxX));
             ImGui::SameLine();
-            invalidate(minX == maxX, ImGui::DragFloat("Max X", &maxX, 0.1f, minX, FLT_MAX));
+            valueChanged |= flashWidget(minX >= maxX, 0xff0000ff, ImGui::DragFloat("Max X", &maxX, 0.1f, minX, FLT_MAX));
             ImGui::SameLine();
-            if(minX != maxX && ImGui::Button("Graph"))
+            // Always draw the button, even if the domain is wrong
+            ImU32 graphButtonColor = clerp(ImGui::GetStyle().Colors[ImGuiCol_Button],
+                ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered],
+                sin(glfwGetTime() * M_PI * 2) / 2. + 0.5);
+            if(flashButtonWidget(valueChanged, graphButtonColor, ImGui::Button("Graph")) && minX < maxX)
+            {
+                valueChanged = false;
                 refreshFunctionData();
+            }
         ImGui::PopItemWidth();
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.f);
             int bottomY = windowH - buttonSize.y - vSpacing * 2;
