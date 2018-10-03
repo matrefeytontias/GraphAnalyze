@@ -88,9 +88,28 @@ GrapherModule::GrapherModule(int windowWidth, int windowHeight) : w(windowWidth)
 }
 
 /**
- * Builds the arrays of X and Y from a minX and a maxX.
+ * Call whenever minX, maxX or the function expression changes.
  */
-void GrapherModule::evaluateFunction(double minX, double maxX)
+void GrapherModule::refreshFunctionData()
+{
+    try
+    {
+        p.SetExpr(std::string(buf));
+        invalidFunc = false;
+        evaluateFunction();
+        gi.build(xs, ys);
+    }
+    catch(mu::Parser::exception_type &e)
+    {
+        invalidFunc = true;
+        gi.ready  = false;
+    }
+}
+
+/**
+ * Builds the arrays of X and Y from this.minX and this.maxX.
+ */
+void GrapherModule::evaluateFunction()
 {
     xs.clear();
     ys.clear();
@@ -177,6 +196,44 @@ void GrapherModule::plotFunction(int w, int h)
 }
 
 /**
+ * Handles the user clicking and dragging to zoom on a specific X range.
+ * /!\ This needs the invisible button over the graph area to be the last drawn widget.
+ */
+void GrapherModule::handleZoom()
+{
+    static bool zooming = false;
+    static float startX, endX;
+    if(ImGui::IsItemHovered())
+    {
+        if(ImGui::IsMouseClicked(0))
+        {
+            zooming = true;
+            startX = endX = ImGui::GetMousePos().x;
+        }
+        if(zooming)
+        {
+            ImDrawList *drawList = ImGui::GetWindowDrawList();
+            
+            drawList->AddRectFilled(ImVec2(startX, gi.pos.y), ImVec2(endX, gi.pos.y + gi.size.y),
+                0x8800ff00);
+            
+            if(ImGui::IsMouseDown(0))
+                endX = std::max(startX, ImGui::GetMousePos().x);
+            else
+            {
+                zooming = false;
+                if(startX != endX)
+                {
+                    minX = gi.unscale(startX, 0).x;
+                    maxX = gi.unscale(endX, 0).x;
+                    refreshFunctionData();
+                }
+            }
+        }
+    }
+}
+
+/**
  * Plots the tangent to the function at the position of the mouse.
  * /!\ This needs the invisible button over the graph area to be the last drawn widget.
  */
@@ -232,7 +289,6 @@ void GrapherModule::plotTangent(float length)
 void GrapherModule::render()
 {
     const ImVec2 buttonSize = ImVec2(60, 30);
-    static float minX = -1.f, maxX = 1.f;
     
     ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_FirstUseEver);
     if(!ImGui::Begin("Function graphing test", nullptr))
@@ -302,20 +358,7 @@ void GrapherModule::render()
             invalidate(minX == maxX, ImGui::DragFloat("Max X", &maxX, 0.1f, minX, FLT_MAX));
             ImGui::SameLine();
             if(minX != maxX && ImGui::Button("Graph"))
-            {
-                try
-                {
-                    p.SetExpr(std::string(buf));
-                    invalidFunc = false;
-                    evaluateFunction(minX, maxX);
-                    gi.build(xs, ys);
-                }
-                catch(mu::Parser::exception_type &e)
-                {
-                    invalidFunc = true;
-                    gi.ready  = false;
-                }
-            }
+                refreshFunctionData();
         ImGui::PopItemWidth();
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.f);
             int bottomY = windowH - buttonSize.y - vSpacing * 2;
@@ -327,6 +370,7 @@ void GrapherModule::render()
                     plotFunction(plotSize.x, plotSize.y);
                     // /!\ Obligatory invisible button right before the tangent
                     ImGui::InvisibleButton("PlotArea", plotSize);
+                    handleZoom();
                     if(displayTangents)
                         plotTangent();
                 ImGui::PopClipRect();

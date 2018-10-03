@@ -22,12 +22,15 @@ public:
     GrapherModule(int windowWidth = 640, int windowHeight = 480);
     virtual void render() override;
 private:
-    void evaluateFunction(double minX, double maxX);
+    void refreshFunctionData();
+    void evaluateFunction();
     void plotFunction(int w, int h);
+    void handleZoom();
     void plotTangent(float length = 50);
     int w, h;
     mu::Parser p;
     // TODO : move this back to double
+    float minX = -1, maxX = 1;
     std::vector<float> xs, ys;
     double x = 0.;
     bool invalidFunc = false;
