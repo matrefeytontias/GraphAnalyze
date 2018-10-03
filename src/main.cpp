@@ -24,6 +24,7 @@ using namespace std;
 using namespace ImGui;
 
 void setupImGuiStyle();
+void menu(int *state);
 
 static void glfw_error_callback(int error, const char *description)
 {
@@ -79,17 +80,21 @@ int _main(int, char *argv[])
     glViewport(0, 0, display_w, display_h);
 
     trace("Entering drawing loop");
-    
+
     GraphAnalyze::GrapherModule grapher;
-    
+
+    int state = -1;
     while (!glfwWindowShouldClose(window))
     {
         ImGui_ImplGlfwGL3_NewFrame();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
-        grapher.render();
-        
+
+        if(state == -1)
+            menu(&state);
+        else
+            grapher.render();
+
         ImGui::Render();
         ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
@@ -104,6 +109,53 @@ int _main(int, char *argv[])
     glfwTerminate();
 
     return 0;
+}
+
+void menu(int *state){
+        float w = ImGui::GetWindowWidth();
+        ImGui::SetCursorPosX((w - ImGui::CalcTextSize("Welcome").x)/2);
+        ImGui::Text("Welcome");
+        ImVec2 sizeButton = ImVec2(50,30);
+        int spacing = ImGui::GetStyle().ItemSpacing.x;
+        ImGui::SetCursorPosX((w - sizeButton.x *2 -spacing)/2);
+
+        if(ImGui::Button("Open",sizeButton)){
+
+        }
+        ImGui::SameLine();
+        if(ImGui::Button("Exit",sizeButton)){
+            exit(0);
+        }
+        ImGui::NewLine();
+        ImVec2 sizeButtonModule = ImVec2(w/10,w/10);
+        ImGui::SetCursorPosX((w - sizeButtonModule.x *2 - spacing)/2);
+        ImGui::BeginGroup();  //module list begin
+            ImGui::BeginGroup(); //first column
+                ImGui::BeginGroup(); //first module
+                    if(ImGui::Button("Module1",sizeButtonModule))
+                        *state=1;
+                    ImGui::Text("Description module1");
+                ImGui::EndGroup(); //end first module
+                ImGui::BeginGroup(); //second module
+                    if(ImGui::Button("Module2",sizeButtonModule))
+                        *state=1;
+                    ImGui::Text("Description module2");
+                ImGui::EndGroup(); //end second module
+            ImGui::EndGroup();  //End first column
+            ImGui::SameLine();
+            ImGui::BeginGroup(); //2nd column
+                ImGui::BeginGroup(); //first module
+                    if(ImGui::Button("Module3",sizeButtonModule))
+                        *state=1;
+                    ImGui::Text("Description module3");
+                ImGui::EndGroup(); //end first module
+                ImGui::BeginGroup(); //second module
+                    if(ImGui::Button("Module4",sizeButtonModule))
+                        *state=1;
+                    ImGui::Text("Description module4");
+                ImGui::EndGroup(); //end second module
+            ImGui::EndGroup();  //End 2nd column
+        ImGui::EndGroup(); //module list end
 }
 
 int main(int argc, char *argv[])
