@@ -257,8 +257,10 @@ void GrapherModule::plotTangent(float length)
         df.x /= l; df.y /= l;
         
         ImVec2 textSize = ImGui::CalcTextSize("Orthonormal");
+        float orthoLen = (textSize.x - textSize.y) / 2;
+        
         ImVec2 boxBase(gi.pos.x + gi.size.x - textSize.x - 3, 0);
-        boxBase.y = origin.x + length > boxBase.x && origin.y < gi.pos.y + gi.size.y / 2
+        boxBase.y = origin.x + length > boxBase.x && origin.y - length < gi.pos.y + textSize.x
             ? gi.pos.y + gi.size.y - textSize.x - 1 : gi.pos.y - 1;
         drawList->AddRectFilled(ImVec2(boxBase.x, boxBase.y),
             ImVec2(boxBase.x + textSize.x + 3, boxBase.y + textSize.x + 2),
@@ -268,7 +270,6 @@ void GrapherModule::plotTangent(float length)
             0xffffffff);
         
         drawList->AddText(ImVec2(boxBase.x + 1, boxBase.y + 1), 0xff000000, "Orthonormal");
-        float orthoLen = (textSize.x - textSize.y) / 2;
         
         ImVec2 orthoBase(boxBase.x + textSize.x / 2, boxBase.y + textSize.y + orthoLen);
         drawList->AddLine(ImVec2(orthoBase.x - df.x * orthoLen, orthoBase.y + df.y * orthoLen),
