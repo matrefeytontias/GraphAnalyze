@@ -201,35 +201,12 @@ void GrapherModule::plotFunction(int w, int h)
  */
 void GrapherModule::handleZoom()
 {
-    static bool zooming = false;
     static float startX, endX;
-    if(ImGui::IsItemHovered())
+    if(userSelectArea(&startX, &endX, true) && startX != endX)
     {
-        if(ImGui::IsMouseClicked(0))
-        {
-            zooming = true;
-            startX = endX = ImGui::GetMousePos().x;
-        }
-        if(zooming)
-        {
-            ImDrawList *drawList = ImGui::GetWindowDrawList();
-            
-            drawList->AddRectFilled(ImVec2(startX, gi.pos.y), ImVec2(endX, gi.pos.y + gi.size.y),
-                0x8800ff00);
-            
-            if(ImGui::IsMouseDown(0))
-                endX = std::max(startX, ImGui::GetMousePos().x);
-            else
-            {
-                zooming = false;
-                if(startX != endX)
-                {
-                    minX = gi.unscale(startX, 0).x;
-                    maxX = gi.unscale(endX, 0).x;
-                    refreshFunctionData();
-                }
-            }
-        }
+        minX = gi.unscale(std::min(startX, endX), 0).x;
+        maxX = gi.unscale(std::max(startX, endX), 0).x;
+        refreshFunctionData();
     }
 }
 
@@ -281,6 +258,43 @@ void GrapherModule::plotTangent(float length)
         drawList->AddLine(ImVec2(orthoBase.x - df.x * orthoLen, orthoBase.y + df.y * orthoLen),
             ImVec2(orthoBase.x + df.x * orthoLen, orthoBase.y - df.y * orthoLen), 0xff0000ff, 4);
     }
+}
+
+/**
+ * Lets the user select an area in the graph by clicking and dragging with the left mouse button.
+ * Returns true when the user is done selecting..
+ * /!\ This needs the invisible button over the graph area to be the last drawn widget.
+ */
+bool GrapherModule::userSelectArea(float *startX, float *endX, bool allowOverlap)
+{
+    static bool selecting = false;
+    if(ImGui::IsItemHovered())
+    {
+        if(ImGui::IsMouseClicked(0))
+        {
+            selecting = true;
+            *startX = *endX = ImGui::GetMousePos().x;
+        }
+        
+        if(ImGui::IsMouseDown(0))
+            *endX = allowOverlap ? ImGui::GetMousePos().x : std::max(*startX, ImGui::GetMousePos().x);
+    }
+    
+    if(selecting)
+    {
+        ImDrawList *drawList = ImGui::GetWindowDrawList();
+        
+        drawList->AddRectFilled(ImVec2(*startX, gi.pos.y), ImVec2(*endX, gi.pos.y + gi.size.y),
+            0x8800ff00);
+        
+        if(!ImGui::IsMouseDown(0))
+        {
+            selecting = false;
+            return true;
+        }
+    }
+    
+    return false;
 }
 
 /**
@@ -370,7 +384,8 @@ void GrapherModule::render()
                     plotFunction(plotSize.x, plotSize.y);
                     // /!\ Obligatory invisible button right before the tangent
                     ImGui::InvisibleButton("PlotArea", plotSize);
-                    handleZoom();
+                    if(hasClick)
+                        handleZoom();
                     if(displayTangents)
                         plotTangent();
                 ImGui::PopClipRect();

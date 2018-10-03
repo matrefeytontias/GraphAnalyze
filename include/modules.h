@@ -11,7 +11,17 @@ namespace GraphAnalyze
 
 class Module
 {
+public:
     virtual void render() = 0;
+    /**
+     * Lets the module handle the user's mouse or not.
+     */
+    void canHandleClick(bool v)
+    {
+        hasClick = v;
+    }
+protected:
+    bool hasClick = true;
 };
 
 #define MAX_FUNC_LENGTH 5000
@@ -21,6 +31,7 @@ class GrapherModule : public Module
 public:
     GrapherModule(int windowWidth = 640, int windowHeight = 480);
     virtual void render() override;
+    bool userSelectArea(float *startX, float *endX, bool allowOverlap = false);
 private:
     void refreshFunctionData();
     void evaluateFunction();
