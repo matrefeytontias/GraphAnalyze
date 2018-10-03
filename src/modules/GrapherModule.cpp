@@ -61,8 +61,8 @@ typedef struct
      */
     inline ImVec2 scale(double x, double y)
     {
-        return ImVec2((x - minX) * size.x / (maxX - minX) + pos.x,
-            size.y - (y - minY) * size.y / (maxY - minY) + pos.y);
+        return ImVec2((x - minX) * (size.x - 1) / (maxX - minX) + pos.x,
+            size.y - (y - minY) * (size.y - 1) / (maxY - minY) + pos.y);
     }
     
     /**
@@ -70,8 +70,8 @@ typedef struct
      */
     inline ImVec2 unscale(float x, float y)
     {
-        return ImVec2((x - pos.x) * (maxX - minX) / size.x + minX,
-            (y - pos.y) * (maxY - minY) / size.y + minY);
+        return ImVec2((x - pos.x) * (maxX - minX) / (size.x - 1) + minX,
+            (y - pos.y) * (maxY - minY) / (size.y - 1) + minY);
     }
     
 } GraphInfo;
@@ -117,64 +117,86 @@ void GrapherModule::plotFunction(int w, int h)
 {
     gi.updateArea(w, h);
     ImDrawList *drawList = ImGui::GetWindowDrawList();
-    ImVec2 top = gi.pos, bot(gi.pos.x + gi.size.x + 1, gi.pos.y + gi.size.y + 1),
+    ImVec2 top = gi.pos, bot(gi.pos.x + gi.size.x, gi.pos.y + gi.size.y),
     origin = gi.scale(0, 0);
     
     drawList->AddRectFilled(top, bot, 0xffffffff);
     
-    ImGui::PushClipRect(top, bot, true);
-        double xrange = gi.maxX - gi.minX,
-            yrange = gi.maxY - gi.minY;
-        std::string s = toString((gi.minX + gi.maxX) / 2);
-        
-        // Draw the axis system
-        int xTickSpace = (int)ImGui::CalcTextSize("0.00000").x,
-            yTickSpace = (int)ImGui::CalcTextSize("0.000").x;
-        ImU32 col32 = 0xff888888;
-        drawList->AddLine(ImVec2(origin.x, top.y), ImVec2(origin.x, top.y + h), col32, 1);
-        drawList->AddLine(ImVec2(top.x, origin.y), ImVec2(top.x + w, origin.y), col32, 1);
-        
-        // Draw the X axis' ticks
-        int nbTicks = (w / xTickSpace) & ~1;
+    double xrange = gi.maxX - gi.minX,
+        yrange = gi.maxY - gi.minY;
+    std::string s = toString((gi.minX + gi.maxX) / 2);
+    
+    // Draw the axis system
+    int xTickSpace = (int)ImGui::CalcTextSize("0.00000").x,
+        yTickSpace = (int)ImGui::CalcTextSize("0.000").x;
+    ImU32 col32 = 0xff888888;
+    
+    drawList->AddLine(ImVec2(origin.x, top.y), ImVec2(origin.x, top.y + h), col32, 1);
+    drawList->AddLine(ImVec2(top.x, origin.y), ImVec2(top.x + w, origin.y), col32, 1);
+    
+    // Draw the X axis' ticks
+    int nbTicks = (w / xTickSpace) & ~1;
+    for(int k = 0; k <= nbTicks; k++)
+    {
+        int x = top.x + w * k / nbTicks;
+        // Avoid tick overlap
+        if(abs(x - origin.x) >= xTickSpace)
+        {
+            drawList->AddLine(ImVec2(x, origin.y - 5), ImVec2(x, origin.y + 5), col32, 1);
+            std::string s = toString(gi.minX + xrange * k / nbTicks, 2);
+            ImVec2 textSize = ImGui::CalcTextSize(s.c_str());
+            drawList->AddText(ImVec2(x - textSize.x / 2, std::min(bot.y - textSize.y, origin.y + 5)),
+                col32, s.c_str());
+        }
+    }
+    
+    // Draw the Y axis' ticks
+    if(yrange > 0)
+    {
+        nbTicks = (h / yTickSpace) & ~1;
         for(int k = 0; k <= nbTicks; k++)
         {
-            int x = top.x + w * k / nbTicks;
+            int y = bot.y - h * k / nbTicks;
             // Avoid tick overlap
-            if(abs(x - origin.x) >= xTickSpace)
+            if(abs(y - origin.y) >= yTickSpace)
             {
-                drawList->AddLine(ImVec2(x, origin.y - 5), ImVec2(x, origin.y + 5), col32, 1);
-                std::string s = toString(gi.minX + xrange * k / nbTicks, 2);
-                ImVec2 textSize = ImGui::CalcTextSize(s.c_str());
-                drawList->AddText(ImVec2(x - textSize.x / 2, std::min(bot.y - textSize.y, origin.y + 5)),
-                    col32, s.c_str());
+                drawList->AddLine(ImVec2(origin.x - 5, y), ImVec2(origin.x + 5, y), col32, 1);
+                std::string s = toString(gi.minY + yrange * k / nbTicks, 2);
+                drawList->AddText(ImVec2(origin.x + 2, y), col32, s.c_str());
             }
         }
+    }
+    
+    // Plot the actual function
+    col32 = 0xff000000;
+    for(unsigned int k = 0; k + 1 < ys.size(); k++)
+    {
+        drawList->AddLine(gi.scale(xs[k], ys[k]), gi.scale(xs[k + 1], ys[k + 1]),
+            col32, 1);
+    }
+}
+
+void GrapherModule::plotTangent(float length)
+{
+    if(ImGui::IsItemHovered())
+    {
+        ImDrawList *drawList = ImGui::GetWindowDrawList();
+        int mouseX = ImGui::GetMousePos().x;
+        int index = (int)((mouseX - gi.pos.x) * 999 / gi.size.x);
+        ImVec2 p = gi.scale(xs[index], ys[index]),
+            np = gi.scale(xs[index + 1], ys[index + 1]);
+        ImVec2 df(np.x - p.x, np.y - p.y);
+        float l = sqrt(df.x * df.x + df.y * df.y);
+        df.x /= l; df.y /= l;
         
-        // Draw the Y axis' ticks
-        if(yrange > 0)
-        {
-            nbTicks = (h / yTickSpace) & ~1;
-            for(int k = 0; k <= nbTicks; k++)
-            {
-                int y = bot.y - h * k / nbTicks;
-                // Avoid tick overlap
-                if(abs(y - origin.y) >= yTickSpace)
-                {
-                    drawList->AddLine(ImVec2(origin.x - 5, y), ImVec2(origin.x + 5, y), col32, 1);
-                    std::string s = toString(gi.minY + yrange * k / nbTicks, 2);
-                    drawList->AddText(ImVec2(origin.x + 2, y), col32, s.c_str());
-                }
-            }
-        }
+        ImVec2 origin = gi.scale(xs[index], ys[index]);
         
-        // Plot the actual function
-        col32 = 0xff000000;
-        for(unsigned int k = 0; k + 1 < ys.size(); k++)
-        {
-            drawList->AddLine(gi.scale(xs[k], ys[k]), gi.scale(xs[k + 1], ys[k + 1]),
-                col32, 1);
-        }
-    ImGui::PopClipRect();
+        drawList->AddLine(ImVec2(origin.x, gi.pos.y), ImVec2(origin.x, gi.pos.y + gi.size.y),
+            0xff0000ff, 1);
+        drawList->AddLine(ImVec2(origin.x - df.x * length, origin.y - df.y * length),
+            ImVec2(origin.x + df.x * length, origin.y + df.y * length), 0xff0000ff,
+            4);
+    }
 }
 
 /**
@@ -229,10 +251,6 @@ void GrapherModule::render()
         ImGui::NewLine();
         static bool displayTangents = false;
         ImGui::Checkbox("Tangents", &displayTangents);
-        if(displayTangents)
-        {
-            trace("Display the tangents pls");
-        }
         if(ImGui::Button("op2", buttonSize))
         {
             //todo
@@ -276,9 +294,17 @@ void GrapherModule::render()
         ImGui::PopItemWidth();
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.f);
             int bottomY = windowH - buttonSize.y - vSpacing * 2;
+            ImVec2 plotSize(windowW - startPosGraph - hSpacing,
+                bottomY - ImGui::GetCursorPosY() - vSpacing);
             if(gi.ready)
-                plotFunction(windowW - startPosGraph - hSpacing,
-                    bottomY - ImGui::GetCursorPosY() - vSpacing);
+            {
+                ImGui::PushClipRect(gi.pos, ImVec2(gi.pos.x + gi.size.x, gi.pos.y + gi.size.y), true);
+                    plotFunction(plotSize.x, plotSize.y);
+                    ImGui::InvisibleButton("PlotArea", plotSize);
+                    if(displayTangents)
+                        plotTangent();
+                ImGui::PopClipRect();
+            }
             ImGui::SetCursorPosY(bottomY);
             float tabSize = (windowW - startPosGraph - 20) / 2 - 50;
             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, .1f);
@@ -300,23 +326,4 @@ void GrapherModule::render()
         ImGui::PopStyleVar();
     ImGui::EndGroup();
     ImGui::End();
-    
-    // Custom rendering code for later possibly
-    /*
-    if(gi.ready)
-    {
-        gi.updateArea();
-        // Graph the function
-        ImDrawList *drawList = ImGui::GetWindowDrawList();
-        const float thickness = 2;
-        const ImU32 col32 = 0xffffffff;
-    
-        for(unsigned int k = 0; k < xs.size() - 1; k++)
-        {
-            drawList->AddLine(gi.scale(xs[k], ys[k]), gi.scale(xs[k + 1], ys[k + 1]),
-                col32, thickness);
-        }
-    }
-    ImGui::End();
-    */
 }

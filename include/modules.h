@@ -24,6 +24,7 @@ public:
 private:
     void evaluateFunction(double minX, double maxX);
     void plotFunction(int w, int h);
+    void plotTangent(float length = 50);
     int w, h;
     mu::Parser p;
     // TODO : move this back to double
