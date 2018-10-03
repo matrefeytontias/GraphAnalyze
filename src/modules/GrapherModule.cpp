@@ -145,6 +145,11 @@ std::string toString(double v, int precision = 0)
     return sstream.str();
 }
 
+inline float clamp(float v, float a, float b)
+{
+    return std::max(a, std::min(b, v));
+}
+
 /**
  * Draws the built function using the current graph info.
  */
@@ -180,7 +185,7 @@ void GrapherModule::plotFunction(int w, int h)
             drawList->AddLine(ImVec2(x, origin.y - 5), ImVec2(x, origin.y + 5), col32, 1);
             std::string s = toString(gi.minX + xrange * k / nbTicks, 2);
             ImVec2 textSize = ImGui::CalcTextSize(s.c_str());
-            drawList->AddText(ImVec2(x - textSize.x / 2, std::min(bot.y - textSize.y, origin.y + 5)),
+            drawList->AddText(ImVec2(x - textSize.x / 2, clamp(origin.y + 5, top.y, bot.y - textSize.y)),
                 col32, s.c_str());
         }
     }
@@ -197,7 +202,8 @@ void GrapherModule::plotFunction(int w, int h)
             {
                 drawList->AddLine(ImVec2(origin.x - 5, y), ImVec2(origin.x + 5, y), col32, 1);
                 std::string s = toString(gi.minY + yrange * k / nbTicks, 2);
-                drawList->AddText(ImVec2(origin.x + 2, y), col32, s.c_str());
+                ImVec2 textSize = ImGui::CalcTextSize(s.c_str());
+                drawList->AddText(ImVec2(clamp(origin.x + 2, top.x, bot.x - textSize.x), y), col32, s.c_str());
             }
         }
     }
