@@ -309,13 +309,11 @@ void GrapherModule::render()
                     invalidFunc = false;
                     evaluateFunction(minX, maxX);
                     gi.build(xs, ys);
-                    trace("Valid func");
                 }
                 catch(mu::Parser::exception_type &e)
                 {
                     invalidFunc = true;
                     gi.ready  = false;
-                    trace("Invalid func");
                 }
             }
         ImGui::PopItemWidth();
