@@ -40,9 +40,8 @@ private:
     void plotTangent(float length = 50);
     int w, h;
     mu::Parser p;
-    // TODO : move this back to double
     float minX = -1, maxX = 1;
-    std::vector<float> xs, ys;
+    std::vector<double> xs, ys;
     double x = 0.;
     bool invalidFunc = false;
     char buf[MAX_FUNC_LENGTH] = "";

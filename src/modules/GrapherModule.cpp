@@ -61,7 +61,7 @@ typedef struct
     /**
      * Builds the graph info from arrays of X and Y.
      */
-    void build(const std::vector<float> &xs, std::vector<float> &ys)
+    void build(const std::vector<double> &xs, std::vector<double> &ys)
     {
         static auto minComputer = [](double a, double b) { return std::min(a, b); };
         static auto maxComputer = [](double a, double b) { return std::max(a, b); };
