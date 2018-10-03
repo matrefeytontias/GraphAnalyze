@@ -82,15 +82,18 @@ int _main(int, char *argv[])
     trace("Entering drawing loop");
 
     GraphAnalyze::GrapherModule grapher;
+    vector<bool> state = {false,false,false,false};
+    GraphAnalyze::HomeModule home = GraphAnalyze::HomeModule(&state);
 
-    bool state[] = {false,false,false,false};
+
+
     string name[] = {"module1","module2","module3","module4"};
     while (!glfwWindowShouldClose(window))
     {
         ImGui_ImplGlfwGL3_NewFrame();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        menu(state);
+        home.render();
         if(state[0])
             grapher.render();
         if(state[1])

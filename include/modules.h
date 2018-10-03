@@ -34,6 +34,12 @@ private:
     char buf[MAX_FUNC_LENGTH] = "";
 };
 
+class HomeModule : public Module{
+public:
+    HomeModule(std::vector<bool> *state);
+    virtual void render() override;
+};
+
 }
 
 #endif
