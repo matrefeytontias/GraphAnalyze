@@ -36,7 +36,7 @@ private:
 
 class HomeModule : public Module{
 public:
-    HomeModule(std::vector<bool> *state);
+    HomeModule(std::vector<bool> &state);
     virtual void render() override;
 };
 

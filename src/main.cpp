@@ -83,7 +83,7 @@ int _main(int, char *argv[])
 
     GraphAnalyze::GrapherModule grapher;
     vector<bool> state = {false,false,false,false};
-    GraphAnalyze::HomeModule home = GraphAnalyze::HomeModule(&state);
+    GraphAnalyze::HomeModule home = GraphAnalyze::HomeModule(state);
 
 
 
