@@ -8,13 +8,14 @@
 
 using namespace GraphAnalyze;
 
-std::vector<bool> *state;
-HomeModule::HomeModule(std::vector<bool> &state_arg)
+bool *state;
+HomeModule::HomeModule(bool state_arg[])
 {
-    state = &state_arg;
+    state = state_arg;
 }
 
 void HomeModule::render(std::string name){
+
        ImGui::Begin(name.c_str());
         ImVec2 windowSize = ImGui::GetWindowSize();
         ImGui::SetCursorPosX((windowSize.x - ImGui::CalcTextSize("Welcome").x)/2);
@@ -40,12 +41,12 @@ void HomeModule::render(std::string name){
             ImGui::BeginGroup(); //first column
                 ImGui::BeginGroup(); //first module
                     if(ImGui::Button("Graph",sizeButtonModule))
-                        (*state)[0] = true;
+                        (state)[0] = true;
                     ImGui::Text("Plot Graph and show \n information about it");
                 ImGui::EndGroup(); //end first module
                 ImGui::BeginGroup(); //second module
                     if(ImGui::Button("Module2",sizeButtonModule))
-                        (*state)[1]=true;
+                        (state)[1]=true;
                     ImGui::Text("Description module2 \n ...");
                 ImGui::EndGroup(); //end second module
             ImGui::EndGroup();  //End first column
@@ -53,16 +54,17 @@ void HomeModule::render(std::string name){
             ImGui::BeginGroup(); //2nd column
                 ImGui::BeginGroup(); //first module
                     if(ImGui::Button("Module3",sizeButtonModule))
-                        (*state)[2]=true;
+                        (state)[2]=true;
                     ImGui::Text("Description module3 \n ...");
                 ImGui::EndGroup(); //end first module
                 ImGui::BeginGroup(); //second module
                     if(ImGui::Button("Module4",sizeButtonModule))
-                        (*state)[3]=true;
+                        (state)[3]=true;
                     ImGui::Text("Description module4 \n ...");
                 ImGui::EndGroup(); //end second module
             ImGui::EndGroup();  //End 2nd column
         ImGui::EndGroup(); //module list end
     ImGui::End();
+
 
 }

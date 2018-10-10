@@ -19,7 +19,7 @@ class Module
 class GrapherModule : public Module
 {
 public:
-    GrapherModule(int windowWidth = 640, int windowHeight = 480);
+    GrapherModule(bool *b, int windowWidth = 640, int windowHeight = 480);
     virtual void render(std::string s) override;
 private:
     void evaluateFunction(double minX, double maxX);
@@ -36,7 +36,7 @@ private:
 
 class HomeModule : public Module{
 public:
-    HomeModule(std::vector<bool> &state);
+    HomeModule(bool state[]);
     virtual void render(std::string s) override;
 };
 

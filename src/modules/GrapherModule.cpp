@@ -77,9 +77,11 @@ typedef struct
 } GraphInfo;
 
 static GraphInfo gi;
+bool *open;
 
-GrapherModule::GrapherModule(int windowWidth, int windowHeight) : w(windowWidth), h(windowHeight)
+GrapherModule::GrapherModule(bool *b, int windowWidth, int windowHeight) : w(windowWidth), h(windowHeight)
 {
+    open = b;
     p.DefineVar("x", &x);
     p.SetExpr("x^2 + x + 1");
 
@@ -235,7 +237,9 @@ void GrapherModule::render(std::string name)
     static float minX = -1.f, maxX = 1.f;
 
     ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_FirstUseEver);
-    if(!ImGui::Begin(name.c_str()))
+    if(!(*open))
+        return;
+    if(!ImGui::Begin(name.c_str(),open))
     {
         ImGui::End();
         return;

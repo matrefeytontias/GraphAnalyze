@@ -81,28 +81,30 @@ int _main(int, char *argv[])
 
     trace("Entering drawing loop");
 
-    GraphAnalyze::GrapherModule grapher;
-    vector<bool> state = {false,false,false,false};
+    const unsigned int MODULE_NUMBER = 4;
+
+    bool state[MODULE_NUMBER];
+
+    for(unsigned int i=0;i<MODULE_NUMBER;i++)
+                state[i] = false;
+
+//C++ de merde xgldjhfgjghkjlfpkhb
+    GraphAnalyze::GrapherModule grapher = GraphAnalyze::GrapherModule(&state[0]);
     GraphAnalyze::HomeModule home = GraphAnalyze::HomeModule(state);
 
-
-
-    string name[] = {"module1","module2","module3","module4"};
+    vector<string> name = {"Graph","module2","module3","module4"};
     while (!glfwWindowShouldClose(window))
     {
         ImGui_ImplGlfwGL3_NewFrame();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         home.render("Home");
-        if(state[0]){
-            grapher.render(name[0]);
+
+        for(unsigned int i=0; i< MODULE_NUMBER; i++){
+            if(state[i])
+                grapher.render(name[i]);
         }
-        if(state[1])
-            grapher.render(name[1]);
-        if(state[2])
-            grapher.render(name[2]);
-        if(state[3])
-            grapher.render(name[3]);
+
         ImGui::Render();
         ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
