@@ -16,15 +16,13 @@ using namespace GraphAnalyze;
  */
 void IntegrationSubModule::render()
 {
-    static bool displayResult = false;
-    // ImDrawList *drawList = ImGui::GetWindowDrawList();
-    
     parent->canHandleClick(!active);
+    
     if(active)
     {
         // Select area first because we need the graph area to be the last drawn widget
         static float minX, maxX;
-        displayResult |= parent->userSelectArea(&minX, &maxX, true, true, [=](ImVec2 &a, ImVec2 &b) { this->selectionDrawer(a, b); });
+        parent->userSelectArea(&minX, &maxX, true, true, [=](ImVec2 &a, ImVec2 &b) { this->selectionDrawer(a, b); });
         startX = parent->gi.unscale(minX, 0).x;
         endX = parent->gi.unscale(maxX, 0).x;
         
@@ -33,24 +31,21 @@ void IntegrationSubModule::render()
         std::ostringstream ss;
         ss << "Integrating from " << startX << " to " << endX;
         ImGui::Text(ss.str().c_str());
-        if(displayResult)
-        {
-            double rangeX = parent->gi.maxX - parent->gi.minX;
-            std::vector<double> &xs = parent->xs,
-                &ys = parent->ys;
-            int minIndex = (int)((std::min(startX, endX) - parent->gi.minX) * PLOT_INTERVALS
-                / rangeX),
-                maxIndex = (int)((std::max(startX, endX) - parent->gi.minX) * PLOT_INTERVALS
-                / rangeX);
-            double result = 0;
-            for(int k = minIndex; k < maxIndex; k++)
-                result += (ys[k + 1] + ys[k]) * (xs[k + 1] - xs[k]) / 2;
-            if(minX > maxX)
-                result *= -1;
-            ss.str("");
-            ss << "Result : " << result;
-            ImGui::Text(ss.str().c_str());
-        }
+        double rangeX = parent->gi.maxX - parent->gi.minX;
+        std::vector<double> &xs = parent->xs,
+            &ys = parent->ys;
+        int minIndex = (int)((std::min(startX, endX) - parent->gi.minX) * PLOT_INTERVALS
+            / rangeX),
+            maxIndex = (int)((std::max(startX, endX) - parent->gi.minX) * PLOT_INTERVALS
+            / rangeX);
+        double result = 0;
+        for(int k = minIndex; k < maxIndex; k++)
+            result += (ys[k + 1] + ys[k]) * (xs[k + 1] - xs[k]) / 2;
+        if(minX > maxX)
+            result *= -1;
+        ss.str("");
+        ss << "Result : " << result;
+        ImGui::Text(ss.str().c_str());
         ImGui::End();
     }
 }
