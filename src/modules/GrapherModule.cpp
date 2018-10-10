@@ -170,11 +170,11 @@ void GrapherModule::plotFunction(int w, int h)
  */
 void GrapherModule::handleZoom()
 {
-    static float startX, endX;
-    if(userSelectArea(&startX, &endX, false, true) && startX != endX)
+    static float x1 = minX, x2 = maxX;
+    if(userSelectArea(&x1, &x2, false, true) && x1 != x2)
     {
-        minX = gi.unscale(std::min(startX, endX), 0).x;
-        maxX = gi.unscale(std::max(startX, endX), 0).x;
+        minX = std::min(x1, x2);
+        maxX = std::max(x1, x2);
         refreshFunctionData();
     }
 }
@@ -232,13 +232,13 @@ void GrapherModule::plotTangent(float length)
 
 /**
  * Lets the user select an area in the graph by clicking and dragging with the left mouse button.
- * Returns true when the user is done selecting.
+ * Writes coordinates in function space. Returns true when the user is done selecting.
  * Optionally takes a flag telling whether the selected area should be drawn persistently in-between selects.
  * Optionally takes a function of two ImVec2 that handles drawing the selection. If omitted,
  * draws a standard semi-transparent green rectangle.
  * /!\ This needs the invisible button over the graph area to be the last drawn widget.
  */
-bool GrapherModule::userSelectArea(float *startX, float *endX, bool persistent, bool allowOverlap, std::function<void(ImVec2&, ImVec2&)> selectionDrawer)
+bool GrapherModule::userSelectArea(float *startX, float *endX, bool persistent, bool allowOverlap, std::function<void(float, float)> selectionDrawer)
 {
     static bool selecting = false;
     if(ImGui::IsItemHovered())
@@ -246,21 +246,22 @@ bool GrapherModule::userSelectArea(float *startX, float *endX, bool persistent, 
         if(ImGui::IsMouseClicked(0))
         {
             selecting = true;
-            *startX = *endX = ImGui::GetMousePos().x;
+            *startX = *endX = gi.unscale(ImGui::GetMousePos()).x;
         }
         
         if(ImGui::IsMouseDown(0))
-            *endX = allowOverlap ? ImGui::GetMousePos().x : std::max(*startX, ImGui::GetMousePos().x);
+            *endX = allowOverlap ? gi.unscale(ImGui::GetMousePos()).x
+                : std::max(*startX, gi.unscale(ImGui::GetMousePos()).x);
     }
     
     if(selecting || persistent)
     {
         ImDrawList *drawList = ImGui::GetWindowDrawList();
         
-        ImVec2 rectMin = ImVec2(*startX, gi.pos.y),
-            rectMax = ImVec2(*endX, gi.pos.y + gi.size.y);
+        ImVec2 rectMin = gi.scale(*startX, gi.maxY),
+            rectMax = gi.scale(*endX, gi.minY);
         if(selectionDrawer)
-            selectionDrawer(rectMin, rectMax);
+            selectionDrawer(rectMin.x, rectMax.x);
         else
             drawList->AddRectFilled(rectMin, rectMax, 0x8800ff00);
     }

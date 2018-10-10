@@ -47,7 +47,7 @@ public:
     IntegrationSubModule(GrapherModule *parent) : SubModule(parent) { }
     virtual void render() override;
 private:
-    void selectionDrawer(ImVec2 &rectMin, ImVec2 &rectMax);
+    void selectionDrawer(float x1, float x2);
     float startX = -1, endX = 1;
 };
 
@@ -57,7 +57,8 @@ class GrapherModule : public Module
 public:
     GrapherModule(int windowWidth = 640, int windowHeight = 480);
     virtual void render() override;
-    bool userSelectArea(float *startX, float *endX, bool persistent = false, bool allowOverlap = false, std::function<void(ImVec2&, ImVec2&)> selectionDrawer = nullptr);
+    bool userSelectArea(float *startX, float *endX, bool persistent = false, bool allowOverlap = false,
+        std::function<void(float, float)> selectionDrawer = nullptr);
 private:
     typedef struct
     {
@@ -97,6 +98,11 @@ private:
                 size.y - (y - minY) * (size.y - 1) / (maxY - minY) + pos.y);
         }
         
+        inline ImVec2 scale(ImVec2 a)
+        {
+            return scale(a.x, a.y);
+        }
+        
         /**
          * Maps an (x, y) value in graph space to function space.
          */
@@ -104,6 +110,11 @@ private:
         {
             return ImVec2((x - pos.x) * (maxX - minX) / (size.x - 1) + minX,
                 (y - pos.y) * (maxY - minY) / (size.y - 1) + minY);
+        }
+        
+        inline ImVec2 unscale(ImVec2 a)
+        {
+            return unscale(a.x, a.y);
         }
         
     } GraphInfo;
