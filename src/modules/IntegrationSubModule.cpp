@@ -63,9 +63,11 @@ void IntegrationSubModule::selectionDrawer(ImVec2 &rectMin, ImVec2 &rectMax)
     ImDrawList *drawList = ImGui::GetWindowDrawList();
     std::vector<double> &ys = parent->ys;
     
-    float originY = parent->gi.scale(0, 0).y;
+    float originY = parent->gi.scale(0, 0).y,
+        xmin = std::min(rectMin.x, rectMax.x),
+        xmax = std::max(rectMin.x, rectMax.x);
     
-    for(float x = rectMin.x; x <= rectMax.x; x += 1.f)
+    for(float x = xmin; x <= xmax; x += 1.f)
     {
         int index = (int)((x - parent->gi.pos.x) * PLOT_INTERVALS / parent->gi.size.x);
         float y = parent->gi.scale(0, ys[index]).y;
