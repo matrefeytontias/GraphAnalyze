@@ -229,13 +229,13 @@ void GrapherModule::plotTangent(float length)
 /**
  * Renders the module.
  */
-void GrapherModule::render()
+void GrapherModule::render(std::string name)
 {
     const ImVec2 buttonSize = ImVec2(60, 30);
     static float minX = -1.f, maxX = 1.f;
 
     ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_FirstUseEver);
-    if(!ImGui::Begin("Function graphing test", nullptr))
+    if(!ImGui::Begin(name.c_str()))
     {
         ImGui::End();
         return;

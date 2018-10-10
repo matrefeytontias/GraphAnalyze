@@ -14,8 +14,8 @@ HomeModule::HomeModule(std::vector<bool> &state_arg)
     state = &state_arg;
 }
 
-void HomeModule::render(){
-       ImGui::Begin("Home");
+void HomeModule::render(std::string name){
+       ImGui::Begin(name.c_str());
         ImVec2 windowSize = ImGui::GetWindowSize();
         ImGui::SetCursorPosX((windowSize.x - ImGui::CalcTextSize("Welcome").x)/2);
         ImGui::Text("Welcome");
