@@ -36,7 +36,7 @@ protected:
     T *parent;
 };
 
-#define PLOT_INTERVALS 1000
+#define PLOT_INTERVALS 5000
 #define MAX_FUNC_LENGTH 5000
 
 class GrapherModule;
