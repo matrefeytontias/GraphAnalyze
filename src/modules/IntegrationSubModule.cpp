@@ -24,7 +24,7 @@ void IntegrationSubModule::render()
     {
         // Select area first because we need the graph area to be the last drawn widget
         static float minX, maxX;
-        displayResult |= parent->userSelectArea(&minX, &maxX, true, [=](ImVec2 &a, ImVec2 &b) { this->selectionDrawer(a, b); });
+        displayResult |= parent->userSelectArea(&minX, &maxX, true, true, [=](ImVec2 &a, ImVec2 &b) { this->selectionDrawer(a, b); });
         startX = parent->gi.unscale(minX, 0).x;
         endX = parent->gi.unscale(maxX, 0).x;
         

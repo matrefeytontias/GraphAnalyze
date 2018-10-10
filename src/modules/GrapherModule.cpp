@@ -171,7 +171,7 @@ void GrapherModule::plotFunction(int w, int h)
 void GrapherModule::handleZoom()
 {
     static float startX, endX;
-    if(userSelectArea(&startX, &endX, true) && startX != endX)
+    if(userSelectArea(&startX, &endX, false, true) && startX != endX)
     {
         minX = gi.unscale(std::min(startX, endX), 0).x;
         maxX = gi.unscale(std::max(startX, endX), 0).x;
@@ -233,11 +233,12 @@ void GrapherModule::plotTangent(float length)
 /**
  * Lets the user select an area in the graph by clicking and dragging with the left mouse button.
  * Returns true when the user is done selecting.
+ * Optionally takes a flag telling whether the selected area should be drawn persistently in-between selects.
  * Optionally takes a function of two ImVec2 that handles drawing the selection. If omitted,
  * draws a standard semi-transparent green rectangle.
  * /!\ This needs the invisible button over the graph area to be the last drawn widget.
  */
-bool GrapherModule::userSelectArea(float *startX, float *endX, bool allowOverlap, std::function<void(ImVec2&, ImVec2&)> selectionDrawer)
+bool GrapherModule::userSelectArea(float *startX, float *endX, bool persistent, bool allowOverlap, std::function<void(ImVec2&, ImVec2&)> selectionDrawer)
 {
     static bool selecting = false;
     if(ImGui::IsItemHovered())
@@ -252,7 +253,7 @@ bool GrapherModule::userSelectArea(float *startX, float *endX, bool allowOverlap
             *endX = allowOverlap ? ImGui::GetMousePos().x : std::max(*startX, ImGui::GetMousePos().x);
     }
     
-    if(selecting)
+    if(selecting || persistent)
     {
         ImDrawList *drawList = ImGui::GetWindowDrawList();
         
@@ -262,12 +263,12 @@ bool GrapherModule::userSelectArea(float *startX, float *endX, bool allowOverlap
             selectionDrawer(rectMin, rectMax);
         else
             drawList->AddRectFilled(rectMin, rectMax, 0x8800ff00);
-        
-        if(!ImGui::IsMouseDown(0))
-        {
-            selecting = false;
-            return true;
-        }
+    }
+    
+    if(selecting && !ImGui::IsMouseDown(0))
+    {
+        selecting = false;
+        return true;
     }
     
     return false;

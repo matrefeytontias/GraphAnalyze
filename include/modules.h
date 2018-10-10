@@ -36,7 +36,7 @@ protected:
     T *parent;
 };
 
-#define PLOT_INTERVALS 10000
+#define PLOT_INTERVALS 1000
 #define MAX_FUNC_LENGTH 5000
 
 class GrapherModule;
@@ -57,7 +57,7 @@ class GrapherModule : public Module
 public:
     GrapherModule(int windowWidth = 640, int windowHeight = 480);
     virtual void render() override;
-    bool userSelectArea(float *startX, float *endX, bool allowOverlap = false, std::function<void(ImVec2&, ImVec2&)> selectionDrawer = nullptr);
+    bool userSelectArea(float *startX, float *endX, bool persistent = false, bool allowOverlap = false, std::function<void(ImVec2&, ImVec2&)> selectionDrawer = nullptr);
 private:
     typedef struct
     {
