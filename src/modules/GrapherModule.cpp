@@ -1,8 +1,6 @@
 #include "modules.h"
 
-#include <algorithm>
 #include <iomanip>
-#include <numeric>
 #include <sstream>
 #include <vector>
 
@@ -43,64 +41,13 @@
 
 using namespace GraphAnalyze;
 
-typedef struct
-{
-    ImVec2 pos, size;
-    double minX = -1., maxX = 1., minY, maxY;
-    bool ready = false;
-    /**
-     * Sets the drawing area. If width and height aren't provided, use all of the
-     * available space.
-     */
-    void updateArea(int w = -1, int h = -1)
-    {
-        pos = ImGui::GetCursorScreenPos();
-        size = w < 0 || h < 0 ? ImGui::GetContentRegionAvail() : ImVec2(w, h);
-    }
-    
-    /**
-     * Builds the graph info from arrays of X and Y.
-     */
-    void build(const std::vector<double> &xs, std::vector<double> &ys)
-    {
-        static auto minComputer = [](double a, double b) { return std::min(a, b); };
-        static auto maxComputer = [](double a, double b) { return std::max(a, b); };
-        updateArea();
-        minX = std::accumulate(xs.begin(), xs.end(), xs[0], minComputer);
-        maxX = std::accumulate(xs.begin(), xs.end(), xs[0], maxComputer);
-        minY = std::accumulate(ys.begin(), ys.end(), ys[0], minComputer);
-        maxY = std::accumulate(ys.begin(), ys.end(), ys[0], maxComputer);
-        ready = true;
-    }
-    /**
-     * Maps an (x, y) value in function space to graph space.
-     */
-    inline ImVec2 scale(double x, double y)
-    {
-        return ImVec2((x - minX) * (size.x - 1) / (maxX - minX) + pos.x,
-            size.y - (y - minY) * (size.y - 1) / (maxY - minY) + pos.y);
-    }
-    
-    /**
-     * Maps an (x, y) value in graph space to function space.
-     */
-    inline ImVec2 unscale(float x, float y)
-    {
-        return ImVec2((x - pos.x) * (maxX - minX) / (size.x - 1) + minX,
-            (y - pos.y) * (maxY - minY) / (size.y - 1) + minY);
-    }
-    
-} GraphInfo;
-
-static GraphInfo gi;
-
-GrapherModule::GrapherModule(int windowWidth, int windowHeight) : w(windowWidth), h(windowHeight)
+GrapherModule::GrapherModule(int windowWidth, int windowHeight) : w(windowWidth), h(windowHeight), ism(this)
 {
     p.DefineVar("x", &x);
     p.SetExpr("x^2 + x + 1");
     
-    for(int k = 0; k <= 1000; k++)
-        xs.push_back((k - 500.) / 500.);
+    for(int k = 0; k <= PLOT_INTERVALS; k++)
+        xs.push_back(2. * k / PLOT_INTERVALS - 1.);
 }
 
 /**
@@ -129,9 +76,9 @@ void GrapherModule::evaluateFunction()
 {
     xs.clear();
     ys.clear();
-    for(unsigned int k = 0; k < 1000; k++)
+    for(unsigned int k = 0; k <= PLOT_INTERVALS; k++)
     {
-        xs.push_back(x = (maxX - minX) * k / 999 + minX);
+        xs.push_back(x = (maxX - minX) * k / PLOT_INTERVALS + minX);
         ys.push_back(p.Eval());
     }
 }
@@ -242,7 +189,7 @@ void GrapherModule::plotTangent(float length)
     {
         ImDrawList *drawList = ImGui::GetWindowDrawList();
         int mouseX = ImGui::GetMousePos().x;
-        int index = (int)((mouseX - gi.pos.x) * 999 / gi.size.x);
+        int index = (int)((mouseX - gi.pos.x) * PLOT_INTERVALS / gi.size.x);
         ImVec2 p = gi.scale(xs[index], ys[index]),
             np = gi.scale(xs[index + 1], ys[index + 1]);
         ImVec2 df(np.x - p.x, np.y - p.y);
@@ -285,10 +232,12 @@ void GrapherModule::plotTangent(float length)
 
 /**
  * Lets the user select an area in the graph by clicking and dragging with the left mouse button.
- * Returns true when the user is done selecting..
+ * Returns true when the user is done selecting.
+ * Optionally takes a function of two ImVec2 that handles drawing the selection. If omitted,
+ * draws a standard semi-transparent green rectangle.
  * /!\ This needs the invisible button over the graph area to be the last drawn widget.
  */
-bool GrapherModule::userSelectArea(float *startX, float *endX, bool allowOverlap)
+bool GrapherModule::userSelectArea(float *startX, float *endX, bool allowOverlap, std::function<void(ImVec2&, ImVec2&)> selectionDrawer)
 {
     static bool selecting = false;
     if(ImGui::IsItemHovered())
@@ -307,8 +256,12 @@ bool GrapherModule::userSelectArea(float *startX, float *endX, bool allowOverlap
     {
         ImDrawList *drawList = ImGui::GetWindowDrawList();
         
-        drawList->AddRectFilled(ImVec2(*startX, gi.pos.y), ImVec2(*endX, gi.pos.y + gi.size.y),
-            0x8800ff00);
+        ImVec2 rectMin = ImVec2(*startX, gi.pos.y),
+            rectMax = ImVec2(*endX, gi.pos.y + gi.size.y);
+        if(selectionDrawer)
+            selectionDrawer(rectMin, rectMax);
+        else
+            drawList->AddRectFilled(rectMin, rectMax, 0x8800ff00);
         
         if(!ImGui::IsMouseDown(0))
         {
@@ -393,15 +346,8 @@ void GrapherModule::render()
         ImGui::NewLine();
         static bool displayTangents = false;
         ImGui::Checkbox("Tangents", &displayTangents);
-        if(ImGui::Button("op2", buttonSize))
-        {
-            //todo
-        }
-
-        if(ImGui::Button("op3", buttonSize))
-        {
-            //todo
-        }
+        if(ImGui::Button("Integrate", buttonSize))
+            ism.active = true;
     ImGui::EndGroup();
     ImGui::SameLine();
     ImGui::BeginGroup();
@@ -441,6 +387,7 @@ void GrapherModule::render()
                         handleZoom();
                     if(displayTangents)
                         plotTangent();
+                    ism.render();
                 ImGui::PopClipRect();
             }
             ImGui::SetCursorPosY(bottomY);
