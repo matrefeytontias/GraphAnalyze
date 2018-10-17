@@ -14,8 +14,9 @@ namespace GraphAnalyze
 
 class Module
 {
+
 public:
-    virtual void render() = 0;
+    virtual void render(std::string s) = 0;
     /**
      * Lets the module handle the user's mouse or not.
      */
@@ -55,8 +56,8 @@ class GrapherModule : public Module
 {
     friend IntegrationSubModule;
 public:
-    GrapherModule(int windowWidth = 640, int windowHeight = 480);
-    virtual void render() override;
+    GrapherModule(bool *b, int windowWidth = 640, int windowHeight = 480);
+    virtual void render(std::string s) override;
     bool userSelectArea(float *startX, float *endX, bool persistent = false, bool allowOverlap = false,
         std::function<void(float, float)> selectionDrawer = nullptr);
 private:
@@ -133,6 +134,12 @@ private:
     bool invalidFunc = false;
     char buf[MAX_FUNC_LENGTH] = "";
     IntegrationSubModule ism;
+};
+
+class HomeModule : public Module{
+public:
+    HomeModule(bool state[]);
+    virtual void render(std::string s) override;
 };
 
 }

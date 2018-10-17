@@ -24,6 +24,7 @@ using namespace std;
 using namespace ImGui;
 
 void setupImGuiStyle();
+void menu(bool state[]);
 
 static void glfw_error_callback(int error, const char *description)
 {
@@ -79,17 +80,31 @@ int _main(int, char *argv[])
     glViewport(0, 0, display_w, display_h);
 
     trace("Entering drawing loop");
-    
-    GraphAnalyze::GrapherModule grapher;
-    
+
+    const unsigned int MODULE_NUMBER = 4;
+
+    bool state[MODULE_NUMBER];
+
+    for(unsigned int i=0;i<MODULE_NUMBER;i++)
+                state[i] = false;
+
+//C++ de merde xgldjhfgjghkjlfpkhb
+    GraphAnalyze::GrapherModule grapher = GraphAnalyze::GrapherModule(&state[0]);
+    GraphAnalyze::HomeModule home = GraphAnalyze::HomeModule(state);
+
+    vector<string> name = {"Graph","module2","module3","module4"};
     while (!glfwWindowShouldClose(window))
     {
         ImGui_ImplGlfwGL3_NewFrame();
-
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
-        grapher.render();
-        
+
+        home.render("Home");
+
+        for(unsigned int i=0; i< MODULE_NUMBER; i++){
+            if(state[i])
+                grapher.render(name[i]);
+        }
+
         ImGui::Render();
         ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
@@ -134,6 +149,7 @@ void setupImGuiStyle()
 
     style->WindowPadding = ImVec2(15, 15);
     style->WindowRounding = 5.0f;
+    style->WindowMinSize = ImVec2(500,400);
     style->FramePadding = ImVec2(5, 5);
     style->FrameRounding = 4.0f;
     style->ItemSpacing = ImVec2(12, 8);
@@ -146,10 +162,10 @@ void setupImGuiStyle()
 
     style->Colors[ImGuiCol_Text] = ImVec4(0.20f, 0.19f, 0.19f, 1.00f);
     style->Colors[ImGuiCol_TextDisabled] = ImVec4(0.40f, 0.39f, 0.38f, 0.77f);
-    style->Colors[ImGuiCol_WindowBg] = ImVec4(0.92f, 0.91f, 0.88f, 0.70f);
+    style->Colors[ImGuiCol_WindowBg] = ImVec4(0.8f, 0.8f, 0.8f, 1.00f);
     style->Colors[ImGuiCol_ChildWindowBg] = ImVec4(1.00f, 0.98f, 0.95f, 0.58f);
     style->Colors[ImGuiCol_PopupBg] = ImVec4(0.92f, 0.91f, 0.88f, 0.92f);
-    style->Colors[ImGuiCol_Border] = ImVec4(0.84f, 0.83f, 0.80f, 0.65f);
+    style->Colors[ImGuiCol_Border] = ImVec4(0.0f, 0.0f, 0.0f, 1.f);
     style->Colors[ImGuiCol_BorderShadow] = ImVec4(0.92f, 0.91f, 0.88f, 0.00f);
     style->Colors[ImGuiCol_FrameBg] = ImVec4(1.00f, 0.98f, 0.95f, 1.00f);
     style->Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.99f, 1.00f, 0.40f, 0.78f);
