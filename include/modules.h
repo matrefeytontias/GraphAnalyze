@@ -46,7 +46,7 @@ class IntegrationSubModule : public SubModule<GrapherModule>
 {
 public:
     IntegrationSubModule(GrapherModule *parent) : SubModule(parent) { }
-    virtual void render() override;
+    virtual void render(std::string s) override;
 private:
     void selectionDrawer(float x1, float x2);
     float startX = -1, endX = 1;
