@@ -1,24 +1,38 @@
 #include "modules.h"
 
-#include <algorithm>
 #include <iomanip>
-#include <numeric>
 #include <sstream>
 #include <vector>
 
 #include "imgui.h"
-#include "mu/muParser.h"
 #include "utils.h"
+#include "GLFW/glfw3.h"
+#include "mu/muParser.h"
 
 /**
- * Makes an ImGui call with a red background if a flag is set.
+ * Makes an ImGui call with a colored background if a flag is set.
  * Uses GCC's non-standard statement expression extension.
  */
-#define invalidate(flag, call) \
+#define flashWidget(flag, color, call) \
 ({\
     bool f = flag;\
     if(f)\
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, 0xff0000ff);\
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, color);\
+    bool textModified = call;\
+    if(f)\
+        ImGui::PopStyleColor();\
+    textModified;\
+})
+
+/**
+ * Makes an ImGui call with a colored button color if a flag is set.
+ * Uses GCC's non-standard statement expression extension.
+ */
+#define flashButtonWidget(flag, color, call) \
+({\
+    bool f = flag;\
+    if(f)\
+        ImGui::PushStyleColor(ImGuiCol_Button, color);\
     bool textModified = call;\
     if(f)\
         ImGui::PopStyleColor();\
@@ -27,8 +41,14 @@
 
 using namespace GraphAnalyze;
 
-typedef struct
+GrapherModule::GrapherModule(int windowWidth, int windowHeight) : w(windowWidth), h(windowHeight), ism(this)
 {
+
+    p.DefineVar("x", &x);
+    p.SetExpr("x^2 + x + 1");
+    
+    for(int k = 0; k <= PLOT_INTERVALS; k++)
+        xs.push_back(2. * k / PLOT_INTERVALS - 1.);
     ImVec2 pos, size;
     double minX = -1., maxX = 1., minY, maxY;
     bool ready = false;
@@ -60,18 +80,30 @@ typedef struct
      * Maps an (x, y) value in function space to graph space.
      */
     inline ImVec2 scale(double x, double y)
-    {
-        return ImVec2((x - minX) * (size.x - 1) / (maxX - minX) + pos.x,
-            size.y - (y - minY) * (size.y - 1) / (maxY - minY) + pos.y);
-    }
 
+
+}
+
+/**
+ * Call whenever minX, maxX or the function expression changes.
+ */
+void GrapherModule::refreshFunctionData()
+
+    try
+    {
+        p.SetExpr(std::string(buf));
+        invalidFunc = false;
+        evaluateFunction();
+        gi.build(xs, ys);
+    }
+catch(mu::Parser::exception_type &e)
     /**
      * Maps an (x, y) value in graph space to function space.
      */
     inline ImVec2 unscale(float x, float y)
     {
-        return ImVec2((x - pos.x) * (maxX - minX) / (size.x - 1) + minX,
-            (y - pos.y) * (maxY - minY) / (size.y - 1) + minY);
+        invalidFunc = true;
+        gi.ready  = false;
     }
 
 } GraphInfo;
@@ -87,18 +119,19 @@ GrapherModule::GrapherModule(bool *b, int windowWidth, int windowHeight) : w(win
 
     for(int k = 0; k <= 1000; k++)
         xs.push_back((k - 500.) / 500.);
+
 }
 
 /**
- * Builds the arrays of X and Y from a minX and a maxX.
+ * Builds the arrays of X and Y from this.minX and this.maxX.
  */
-void GrapherModule::evaluateFunction(double minX, double maxX)
+void GrapherModule::evaluateFunction()
 {
     xs.clear();
     ys.clear();
-    for(unsigned int k = 0; k < 1000; k++)
+    for(unsigned int k = 0; k <= PLOT_INTERVALS; k++)
     {
-        xs.push_back(x = (maxX - minX) * k / 999 + minX);
+        xs.push_back(x = (maxX - minX) * k / PLOT_INTERVALS + minX);
         ys.push_back(p.Eval());
     }
 }
@@ -110,6 +143,11 @@ std::string toString(double v, int precision = 0)
         sstream << std::setprecision(precision);
     sstream << v;
     return sstream.str();
+}
+
+inline float clamp(float v, float a, float b)
+{
+    return std::max(a, std::min(b, v));
 }
 
 /**
@@ -137,7 +175,7 @@ void GrapherModule::plotFunction(int w, int h)
     drawList->AddLine(ImVec2(top.x, origin.y), ImVec2(top.x + w, origin.y), col32, 1);
 
     // Draw the X axis' ticks
-    int nbTicks = (w / xTickSpace) & ~1;
+    int nbTicks = std::max(1, (w / xTickSpace) & ~1);
     for(int k = 0; k <= nbTicks; k++)
     {
         int x = top.x + w * k / nbTicks;
@@ -147,7 +185,7 @@ void GrapherModule::plotFunction(int w, int h)
             drawList->AddLine(ImVec2(x, origin.y - 5), ImVec2(x, origin.y + 5), col32, 1);
             std::string s = toString(gi.minX + xrange * k / nbTicks, 2);
             ImVec2 textSize = ImGui::CalcTextSize(s.c_str());
-            drawList->AddText(ImVec2(x - textSize.x / 2, std::min(bot.y - textSize.y, origin.y + 5)),
+            drawList->AddText(ImVec2(x - textSize.x / 2, clamp(origin.y + 5, top.y, bot.y - textSize.y)),
                 col32, s.c_str());
         }
     }
@@ -155,7 +193,7 @@ void GrapherModule::plotFunction(int w, int h)
     // Draw the Y axis' ticks
     if(yrange > 0)
     {
-        nbTicks = (h / yTickSpace) & ~1;
+        nbTicks = std::max(1, (h / yTickSpace) & ~1);
         for(int k = 0; k <= nbTicks; k++)
         {
             int y = bot.y - h * k / nbTicks;
@@ -164,7 +202,8 @@ void GrapherModule::plotFunction(int w, int h)
             {
                 drawList->AddLine(ImVec2(origin.x - 5, y), ImVec2(origin.x + 5, y), col32, 1);
                 std::string s = toString(gi.minY + yrange * k / nbTicks, 2);
-                drawList->AddText(ImVec2(origin.x + 2, y), col32, s.c_str());
+                ImVec2 textSize = ImGui::CalcTextSize(s.c_str());
+                drawList->AddText(ImVec2(clamp(origin.x + 2, top.x, bot.x - textSize.x), y), col32, s.c_str());
             }
         }
     }
@@ -179,6 +218,21 @@ void GrapherModule::plotFunction(int w, int h)
 }
 
 /**
+ * Handles the user clicking and dragging to zoom on a specific X range.
+ * /!\ This needs the invisible button over the graph area to be the last drawn widget.
+ */
+void GrapherModule::handleZoom()
+{
+    static float x1 = minX, x2 = maxX;
+    if(userSelectArea(&x1, &x2, false, true) && x1 != x2)
+    {
+        minX = std::min(x1, x2);
+        maxX = std::max(x1, x2);
+        refreshFunctionData();
+    }
+}
+
+/**
  * Plots the tangent to the function at the position of the mouse.
  * /!\ This needs the invisible button over the graph area to be the last drawn widget.
  */
@@ -188,7 +242,7 @@ void GrapherModule::plotTangent(float length)
     {
         ImDrawList *drawList = ImGui::GetWindowDrawList();
         int mouseX = ImGui::GetMousePos().x;
-        int index = (int)((mouseX - gi.pos.x) * 999 / gi.size.x);
+        int index = (int)((mouseX - gi.pos.x) * PLOT_INTERVALS / gi.size.x);
         ImVec2 p = gi.scale(xs[index], ys[index]),
             np = gi.scale(xs[index + 1], ys[index + 1]);
         ImVec2 df(np.x - p.x, np.y - p.y);
@@ -209,8 +263,10 @@ void GrapherModule::plotTangent(float length)
         df.x /= l; df.y /= l;
 
         ImVec2 textSize = ImGui::CalcTextSize("Orthonormal");
+        float orthoLen = (textSize.x - textSize.y) / 2;
+        
         ImVec2 boxBase(gi.pos.x + gi.size.x - textSize.x - 3, 0);
-        boxBase.y = origin.x + length > boxBase.x && origin.y < gi.pos.y + gi.size.y / 2
+        boxBase.y = origin.x + length > boxBase.x && origin.y - length < gi.pos.y + textSize.x
             ? gi.pos.y + gi.size.y - textSize.x - 1 : gi.pos.y - 1;
         drawList->AddRectFilled(ImVec2(boxBase.x, boxBase.y),
             ImVec2(boxBase.x + textSize.x + 3, boxBase.y + textSize.x + 2),
@@ -220,12 +276,79 @@ void GrapherModule::plotTangent(float length)
             0xffffffff);
 
         drawList->AddText(ImVec2(boxBase.x + 1, boxBase.y + 1), 0xff000000, "Orthonormal");
-        float orthoLen = (textSize.x - textSize.y) / 2;
 
+  float orthoLen = (textSize.x - textSize.y) / 2;
         ImVec2 orthoBase(boxBase.x + textSize.x / 2, boxBase.y + textSize.y + orthoLen);
         drawList->AddLine(ImVec2(orthoBase.x - df.x * orthoLen, orthoBase.y + df.y * orthoLen),
             ImVec2(orthoBase.x + df.x * orthoLen, orthoBase.y - df.y * orthoLen), 0xff0000ff, 4);
     }
+}
+
+/**
+ * Lets the user select an area in the graph by clicking and dragging with the left mouse button.
+ * Writes coordinates in function space. Returns true when the user is done selecting.
+ * Optionally takes a flag telling whether the selected area should be drawn persistently in-between selects.
+ * Optionally takes a function of two ImVec2 that handles drawing the selection. If omitted,
+ * draws a standard semi-transparent green rectangle.
+ * /!\ This needs the invisible button over the graph area to be the last drawn widget.
+ */
+bool GrapherModule::userSelectArea(float *startX, float *endX, bool persistent, bool allowOverlap, std::function<void(float, float)> selectionDrawer)
+{
+    static bool selecting = false;
+    if(ImGui::IsItemHovered())
+    {
+        if(ImGui::IsMouseClicked(0))
+        {
+            selecting = true;
+            *startX = *endX = gi.unscale(ImGui::GetMousePos()).x;
+        }
+        
+        if(ImGui::IsMouseDown(0))
+            *endX = allowOverlap ? gi.unscale(ImGui::GetMousePos()).x
+                : std::max(*startX, gi.unscale(ImGui::GetMousePos()).x);
+    }
+    
+    if(selecting || persistent)
+    {
+        ImDrawList *drawList = ImGui::GetWindowDrawList();
+        
+        ImVec2 rectMin = gi.scale(*startX, gi.maxY),
+            rectMax = gi.scale(*endX, gi.minY);
+        if(selectionDrawer)
+            selectionDrawer(rectMin.x, rectMax.x);
+        else
+            drawList->AddRectFilled(rectMin, rectMax, 0x8800ff00);
+    }
+    
+    if(selecting && !ImGui::IsMouseDown(0))
+    {
+        selecting = false;
+        return true;
+    }
+    
+    return false;
+}
+
+inline float lerp(float a, float b, float v)
+{
+    return (b - a) * v + a;
+}
+
+ImVec4 vlerp(ImVec4 a, ImVec4 b, float v)
+{
+    return ImVec4(lerp(a.x, b.x, v), lerp(a.y, b.y, v), lerp(a.z, b.z, v),
+        lerp(a.w, b.w, v));
+}
+
+inline ImU32 clerp(ImVec4 &a, ImVec4 &b, float v)
+{
+    ImVec4 ha, hb;
+    ImGui::ColorConvertRGBtoHSV(a.x, a.y, a.z, ha.x, ha.y, ha.z);
+    ImGui::ColorConvertRGBtoHSV(b.x, b.y, b.z, hb.x, hb.y, hb.z);
+    ha = vlerp(ha, hb, v);
+    ImGui::ColorConvertHSVtoRGB(ha.x, ha.y, ha.z, ha.x, ha.y, ha.z);
+    ha.w = lerp(a.w, b.w, v);
+    return ImGui::ColorConvertFloat4ToU32(ha);
 }
 
 /**
@@ -234,6 +357,7 @@ void GrapherModule::plotTangent(float length)
 void GrapherModule::render(std::string name)
 {
     const ImVec2 buttonSize = ImVec2(60, 30);
+
     static float minX = -1.f, maxX = 1.f;
 
     ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_FirstUseEver);
@@ -282,43 +406,31 @@ void GrapherModule::render(std::string name)
         ImGui::NewLine();
         static bool displayTangents = false;
         ImGui::Checkbox("Tangents", &displayTangents);
-        if(ImGui::Button("op2", buttonSize))
-        {
-            //todo
-        }
-
-        if(ImGui::Button("op3", buttonSize))
-        {
-            //todo
-        }
+        if(ImGui::Button("Integrate", buttonSize))
+            ism.active = true;
     ImGui::EndGroup();
     ImGui::SameLine();
     ImGui::BeginGroup();
         int startPosGraph = ImGui::GetCursorPosX();
-
+        static bool valueChanged = false;
+        
         ImGui::PushItemWidth(windowW - startPosGraph - hSpacing * 2 - ImGui::CalcTextSize(" = f(x)").x);
-            if(invalidate(invalidFunc, ImGui::InputText(" = f(x)", buf, MAX_FUNC_LENGTH)))
+            if(valueChanged |= flashWidget(invalidFunc, 0xff0000ff, ImGui::InputText(" = f(x)", buf, MAX_FUNC_LENGTH)))
                 invalidFunc = false;
         ImGui::PopItemWidth();
         ImGui::PushItemWidth((windowW - startPosGraph - 20) / 3);
-            invalidate(minX == maxX, ImGui::DragFloat("Min X", &minX, 0.1f, -FLT_MAX, maxX));
+            valueChanged |= flashWidget(minX >= maxX, 0xff0000ff, ImGui::DragFloat("Min X", &minX, 0.1f, -FLT_MAX, maxX));
             ImGui::SameLine();
-            invalidate(minX == maxX, ImGui::DragFloat("Max X", &maxX, 0.1f, minX, FLT_MAX));
+            valueChanged |= flashWidget(minX >= maxX, 0xff0000ff, ImGui::DragFloat("Max X", &maxX, 0.1f, minX, FLT_MAX));
             ImGui::SameLine();
-            if(minX != maxX && ImGui::Button("Graph"))
+            // Always draw the button, even if the domain is wrong
+            ImU32 graphButtonColor = clerp(ImGui::GetStyle().Colors[ImGuiCol_Button],
+                ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered],
+                sin(glfwGetTime() * M_PI * 2) / 2. + 0.5);
+            if(flashButtonWidget(valueChanged, graphButtonColor, ImGui::Button("Graph")) && minX < maxX)
             {
-                try
-                {
-                    p.SetExpr(std::string(buf));
-                    invalidFunc = false;
-                    evaluateFunction(minX, maxX);
-                    gi.build(xs, ys);
-                }
-                catch(mu::Parser::exception_type &e)
-                {
-                    invalidFunc = true;
-                    gi.ready  = false;
-                }
+                valueChanged = false;
+                refreshFunctionData();
             }
         ImGui::PopItemWidth();
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.f);
@@ -331,8 +443,11 @@ void GrapherModule::render(std::string name)
                     plotFunction(plotSize.x, plotSize.y);
                     // /!\ Obligatory invisible button right before the tangent
                     ImGui::InvisibleButton("PlotArea", plotSize);
+                    if(hasClick)
+                        handleZoom();
                     if(displayTangents)
                         plotTangent();
+                    ism.render();
                 ImGui::PopClipRect();
             }
             ImGui::SetCursorPosY(bottomY);
