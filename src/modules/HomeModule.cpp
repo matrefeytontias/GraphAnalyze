@@ -47,7 +47,7 @@ void HomeModule::render(std::string name){
                 ImGui::BeginGroup(); //second module
                     if(ImGui::Button("Module2",sizeButtonModule))
                         (state)[1]=true;
-                    ImGui::Text("Description module2 \n ...");
+                    ImGui::Text("Find root  \n ...");
                 ImGui::EndGroup(); //end second module
             ImGui::EndGroup();  //End first column
             ImGui::SameLine();
@@ -55,7 +55,7 @@ void HomeModule::render(std::string name){
                 ImGui::BeginGroup(); //first module
                     if(ImGui::Button("Module3",sizeButtonModule))
                         (state)[2]=true;
-                    ImGui::Text("Description module3 \n ...");
+                    ImGui::Text("Solve equation \n ...");
                 ImGui::EndGroup(); //end first module
                 ImGui::BeginGroup(); //second module
                     if(ImGui::Button("Module4",sizeButtonModule))

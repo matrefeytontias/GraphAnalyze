@@ -88,11 +88,13 @@ int _main(int, char *argv[])
     for(unsigned int i=0;i<MODULE_NUMBER;i++)
                 state[i] = false;
 
-//C++ de merde xgldjhfgjghkjlfpkhb
     GraphAnalyze::GrapherModule grapher = GraphAnalyze::GrapherModule(&state[0]);
     GraphAnalyze::HomeModule home = GraphAnalyze::HomeModule(state);
+    GraphAnalyze::RootFinderModule rootFinder = GraphAnalyze::RootFinderModule(&state[1]);
+    GraphAnalyze::EquationSolverModule solver = GraphAnalyze::EquationSolverModule(&state[2]);
 
-    vector<string> name = {"Graph","module2","module3","module4"};
+
+    vector<string> name = {"Graph","Root Finder","Solver","module4"};
     while (!glfwWindowShouldClose(window))
     {
         ImGui_ImplGlfwGL3_NewFrame();
@@ -100,10 +102,14 @@ int _main(int, char *argv[])
 
         home.render("Home");
 
-        for(unsigned int i=0; i< MODULE_NUMBER; i++){
-            if(state[i])
-                grapher.render(name[i]);
-        }
+        if(state[0])
+            grapher.render(name[0]);
+        if(state[1])
+            rootFinder.render(name[1]);
+        if(state[2])
+            solver.render(name[2]);
+        if(state[3])
+            grapher.render(name[3]);
 
         ImGui::Render();
         ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());

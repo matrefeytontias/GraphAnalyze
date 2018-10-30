@@ -1,5 +1,6 @@
 #ifndef INC_MODULES
 #define INC_MODULES
+#endif
 
 #include <vector>
 
@@ -36,10 +37,22 @@ private:
 
 class HomeModule : public Module{
 public:
-    HomeModule(bool state[]);
+    HomeModule(bool *b);
     virtual void render(std::string s) override;
 };
 
-}
+class EquationSolverModule : public Module{
+public:
+    EquationSolverModule(bool *b);
+    virtual void render(std::string s) override;
+};
 
-#endif
+class RootFinderModule : public Module{
+public:
+    RootFinderModule(bool *b);
+    virtual void render(std::string s) override;
+private:
+  void plotFunction(int w, int h);
+};
+
+}
