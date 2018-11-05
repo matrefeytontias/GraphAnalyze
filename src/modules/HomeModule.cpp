@@ -53,9 +53,9 @@ void HomeModule::render(std::string name){
             ImGui::SameLine();
             ImGui::BeginGroup(); //2nd column
                 ImGui::BeginGroup(); //first module
-                    if(ImGui::Button("Module3",sizeButtonModule))
+                    if(ImGui::Button("Diff eq",sizeButtonModule))
                         (state)[2]=true;
-                    ImGui::Text("Solve equation \n ...");
+                    ImGui::Text("Solve 1st order linear\ndifferential equations");
                 ImGui::EndGroup(); //end first module
                 ImGui::BeginGroup(); //second module
                     if(ImGui::Button("Module4",sizeButtonModule))

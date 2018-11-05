@@ -91,10 +91,10 @@ int _main(int, char *argv[])
     GraphAnalyze::GrapherModule grapher = GraphAnalyze::GrapherModule(&state[0]);
     GraphAnalyze::HomeModule home = GraphAnalyze::HomeModule(state);
     GraphAnalyze::RootFinderModule rootFinder = GraphAnalyze::RootFinderModule(&state[1]);
-    GraphAnalyze::EquationSolverModule solver = GraphAnalyze::EquationSolverModule(&state[2]);
+    GraphAnalyze::DiffEqSolverModule solver = GraphAnalyze::DiffEqSolverModule(&state[2]);
 
 
-    vector<string> name = {"Graph","Root Finder","Solver","module4"};
+    vector<string> name = { "Graph", "Root Finder", "Differential equation solver", "module4" };
     while (!glfwWindowShouldClose(window))
     {
         ImGui_ImplGlfwGL3_NewFrame();

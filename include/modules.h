@@ -35,19 +35,22 @@ private:
     char buf[MAX_FUNC_LENGTH] = "";
 };
 
-class HomeModule : public Module{
+class HomeModule : public Module
+{
 public:
     HomeModule(bool *b);
     virtual void render(std::string s) override;
 };
 
-class EquationSolverModule : public Module{
+class DiffEqSolverModule : public Module
+{
 public:
-    EquationSolverModule(bool *b);
+    DiffEqSolverModule(bool *b);
     virtual void render(std::string s) override;
 };
 
-class RootFinderModule : public Module{
+class RootFinderModule : public Module
+{
 public:
     RootFinderModule(bool *b);
     virtual void render(std::string s) override;
