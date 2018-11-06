@@ -231,6 +231,9 @@ void GrapherModule::plotTangent(float length)
 /**
  * Renders the module.
  */
+ int tabNumber = 1;
+ int showedGraph = 0;
+ std::vector<std::string> tabVector = {""};
 void GrapherModule::render(std::string name)
 {
     const ImVec2 buttonSize = ImVec2(60, 30);
@@ -309,7 +312,8 @@ void GrapherModule::render(std::string name)
             {
                 try
                 {
-                    p.SetExpr(std::string(buf));
+                    tabVector[showedGraph] = std::string(buf);
+                    p.SetExpr(std::string(tabVector[showedGraph]));
                     invalidFunc = false;
                     evaluateFunction(minX, maxX);
                     gi.build(xs, ys);
@@ -336,22 +340,42 @@ void GrapherModule::render(std::string name)
                 ImGui::PopClipRect();
             }
             ImGui::SetCursorPosY(bottomY);
-            float tabSize = (windowW - startPosGraph - 20) / 2 - 50;
             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, .1f);
-                if(ImGui::Button("Tab1", ImVec2(tabSize, 30)))
-                {
-                    //todo
-                }
-                ImGui::SameLine();
-                if(ImGui::Button("Tab2", ImVec2(tabSize, 30)))
-                {
-                    //todo
-                }
-                ImGui::SameLine();
-                if(ImGui::Button("+", buttonSize))
-                {
-                    //todo
-                }
+            int buttonX = ImGui::GetCursorPosX();
+            int tabSizeD = (windowW - buttonX - 2 * hSpacing - buttonSize.x )/tabNumber;
+            for(int i = 0 ;i< tabNumber;i++){
+              if(i == showedGraph){
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6f, 0.80f, 0.60f, 0.6f));
+              std::string tabName = std::string("Tab") + std::to_string(i+1);
+              if(ImGui::Button(tabName.c_str(), ImVec2(tabSizeD, 30))){
+                    showedGraph = i;
+                    if(tabVector[showedGraph] != ""){
+                      p.SetExpr(std::string(tabVector[showedGraph]));
+                      invalidFunc = false;
+                      evaluateFunction(minX, maxX);
+                      gi.build(xs, ys);
+                    }
+                  }
+                    ImGui::PopStyleColor();
+                  }else{
+                  std::string tabName = std::string("Tab") + std::to_string(i+1);
+                  if(ImGui::Button(tabName.c_str(), ImVec2(tabSizeD, 30))){
+                        showedGraph = i;
+                        if(tabVector[showedGraph] != ""){
+                          p.SetExpr(std::string(tabVector[showedGraph]));
+                          invalidFunc = false;
+                          evaluateFunction(minX, maxX);
+                          gi.build(xs, ys);
+                        }
+                      }
+                  }
+                  ImGui::SameLine(.0f,.0f);
+              }
+
+              if(ImGui::Button("+", (buttonSize)))              {
+                  tabNumber = tabNumber+1;
+                  tabVector.push_back("");
+              }
             ImGui::PopStyleVar();
         ImGui::PopStyleVar();
     ImGui::EndGroup();
