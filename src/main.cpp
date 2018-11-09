@@ -85,7 +85,7 @@ int _main(int, char *argv[])
     bool state[MODULES_NB] = { false };
     
     vector<GraphAnalyze::Module*> modules({ new GraphAnalyze::GrapherModule(&state[0]),
-        nullptr, nullptr, nullptr });
+        nullptr, new GraphAnalyze::DiffEqSolverModule(&state[2]), nullptr });
     
     GraphAnalyze::HomeModule homeModule(state);
     
