@@ -9,7 +9,7 @@
 #include "imgui.h"
 #include "mu/muParser.h"
 
-#include "graphWidget.h"
+#include "widgets.h"
 
 namespace GraphAnalyze
 {

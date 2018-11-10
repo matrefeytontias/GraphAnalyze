@@ -1,4 +1,4 @@
-#include "graphWidget.h"
+#include "widgets.h"
 
 #include <iomanip>
 #include <sstream>
@@ -7,6 +7,28 @@
 inline float clamp(float v, float a, float b)
 {
     return std::max(a, std::min(b, v));
+}
+
+inline float lerp(float a, float b, float v)
+{
+    return (b - a) * v + a;
+}
+
+inline ImVec4 vlerp(ImVec4 a, ImVec4 b, float v)
+{
+    return ImVec4(lerp(a.x, b.x, v), lerp(a.y, b.y, v), lerp(a.z, b.z, v),
+        lerp(a.w, b.w, v));
+}
+
+ImU32 clerp(ImVec4 &a, ImVec4 &b, float v)
+{
+    ImVec4 ha, hb;
+    ImGui::ColorConvertRGBtoHSV(a.x, a.y, a.z, ha.x, ha.y, ha.z);
+    ImGui::ColorConvertRGBtoHSV(b.x, b.y, b.z, hb.x, hb.y, hb.z);
+    ha = vlerp(ha, hb, v);
+    ImGui::ColorConvertHSVtoRGB(ha.x, ha.y, ha.z, ha.x, ha.y, ha.z);
+    ha.w = lerp(a.w, b.w, v);
+    return ImGui::ColorConvertFloat4ToU32(ha);
 }
 
 std::string toString(double v, int precision = 0)

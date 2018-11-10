@@ -72,4 +72,6 @@ void GraphWidget(GraphInfo &gi, std::vector<double> &xs, std::vector<double> &ys
 
 };
 
+ImU32 clerp(ImVec4 &a, ImVec4 &b, float v);
+
 #endif
