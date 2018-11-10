@@ -58,4 +58,13 @@ private:
   void plotFunction(int w, int h);
 };
 
+class ProbaModule : public Module
+{
+public:
+    ProbaModule(bool *b);
+    virtual void render(std::string s) override;
+//private:
+//  void plotProba(int w, int h);
+};
+
 }

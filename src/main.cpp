@@ -92,6 +92,7 @@ int _main(int, char *argv[])
     GraphAnalyze::HomeModule home = GraphAnalyze::HomeModule(state);
     GraphAnalyze::RootFinderModule rootFinder = GraphAnalyze::RootFinderModule(&state[1]);
     GraphAnalyze::DiffEqSolverModule solver = GraphAnalyze::DiffEqSolverModule(&state[2]);
+    GraphAnalyze::ProbaModule proba = GraphAnalyze::ProbaModule(&state[3]);
 
 
     vector<string> name = { "Graph", "Root Finder", "Differential equation solver", "module4" };
@@ -109,7 +110,7 @@ int _main(int, char *argv[])
         if(state[2])
             solver.render(name[2]);
         if(state[3])
-            grapher.render(name[3]);
+            proba.render(name[3]);
 
         ImGui::Render();
         ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
