@@ -4,6 +4,8 @@
 #include <sstream>
 #include <string>
 
+#include "utils.h"
+
 inline float clamp(float v, float a, float b)
 {
     return std::max(a, std::min(b, v));
@@ -103,4 +105,27 @@ void GraphAnalyze::GraphWidget(GraphInfo &gi, std::vector<double> &xs, std::vect
         drawList->AddLine(gi.scale(xs[k], ys[k]), gi.scale(xs[k + 1], ys[k + 1]),
             col32, 1);
     }
+    
+    // Make the widget react like an actual ImGui widget wrt interaction
+    ImGui::InvisibleButton("PlotArea", ImVec2(w, h));
+}
+
+bool GraphAnalyze::InputFunction(const char *label, char *buf, size_t size, mu::Parser &p, bool *invalid)
+{
+    bool valueChanged = ImGui::InputText(label, buf, size);
+    *invalid = false;
+    if(!ImGui::IsItemActive() && buf[0] != '\0')
+    {
+        try
+        {
+            p.SetExpr(std::string(buf));
+            p.Eval();
+        }
+        catch(mu::Parser::exception_type &e)
+        {
+            *invalid = true;
+        }
+    }
+    
+    return valueChanged;
 }

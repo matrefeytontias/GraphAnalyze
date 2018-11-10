@@ -25,18 +25,8 @@ GrapherModule::GrapherModule(bool *open, int windowWidth, int windowHeight) : op
  */
 void GrapherModule::refreshFunctionData()
 {
-    try
-    {
-        p.SetExpr(std::string(buf));
-        invalidFunc = false;
-        evaluateFunction();
-        gi.build(xs, ys);
-    }
-    catch(mu::Parser::exception_type &e)
-    {
-        invalidFunc = true;
-        gi.ready  = false;
-    }
+    evaluateFunction();
+    gi.build(xs, ys);
 }
 
 /**
@@ -225,9 +215,9 @@ void GrapherModule::render()
         int startPosGraph = ImGui::GetCursorPosX();
         static bool valueChanged = false;
         
-        ImGui::PushItemWidth(windowW - startPosGraph - hSpacing * 2 - ImGui::CalcTextSize(" = f(x)").x);
-            if(valueChanged |= flashWidget(invalidFunc, 0xff0000ff, ImGui::InputText(" = f(x)", buf, MAX_FUNC_LENGTH)))
-                invalidFunc = false;
+        ImGui::PushItemWidth(windowW - startPosGraph - hSpacing * 2 - ImGui::CalcTextSize(" =: f(x)").x);
+        valueChanged |= flashWidget(invalidFunc, 0xff0000ff,
+            GraphAnalyze::InputFunction(" =: f(x)", buf, MAX_FUNC_LENGTH, p, &invalidFunc));
         ImGui::PopItemWidth();
         ImGui::PushItemWidth((windowW - startPosGraph - 20) / 3);
             valueChanged |= flashWidget(minX >= maxX, 0xff0000ff, ImGui::DragFloat("Min X", &minX, 0.1f, -FLT_MAX, maxX));
@@ -238,7 +228,8 @@ void GrapherModule::render()
             ImU32 graphButtonColor = clerp(ImGui::GetStyle().Colors[ImGuiCol_Button],
                 ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered],
                 sin(glfwGetTime() * M_PI * 2) / 2. + 0.5);
-            if(flashButtonWidget(valueChanged, graphButtonColor, ImGui::Button("Graph")) && minX < maxX)
+            if(flashButtonWidget(valueChanged, graphButtonColor, ImGui::Button("Graph"))
+                && !invalidFunc && minX < maxX)
             {
                 valueChanged = false;
                 refreshFunctionData();
@@ -252,8 +243,6 @@ void GrapherModule::render()
             {
                 ImGui::PushClipRect(gi.pos, ImVec2(gi.pos.x + gi.size.x, gi.pos.y + gi.size.y), true);
                     GraphAnalyze::GraphWidget(gi, xs, ys, plotSize.x, plotSize.y);
-                    // /!\ Obligatory invisible button right before the tangent
-                    ImGui::InvisibleButton("PlotArea", plotSize);
                     if(hasClick)
                         handleZoom();
                     if(displayTangents)

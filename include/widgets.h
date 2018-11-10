@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "imgui.h"
+#include "mu/muParser.h"
 
 namespace GraphAnalyze
 {
@@ -67,8 +68,23 @@ typedef struct
     }
 } GraphInfo;
 
+/**
+ * Draws an interactive graph of the graph info and function values given, with the
+ * dimensions given.
+ */
 void GraphWidget(GraphInfo &gi, std::vector<double> &xs, std::vector<double> &ys,
     int w, int h);
+
+/**
+ * A special InputText that queries a function that mu::Parser can recognize, and
+ * writes it to the given parser. Returns whether or not its contents changed this
+ * frame. Writes true to `invalid` if the widget is not active (ie being edited)
+ * and the function is invalid, and false in all other cases (this is useful for
+ * flashing the widget).
+ * WARNING : be sure to set your parser variables to values that will allow the
+ * parser to tell whether a function is valid or not.
+ */
+bool InputFunction(const char *label, char *buf, size_t size, mu::Parser &p, bool *invalid);
 
 };
 
