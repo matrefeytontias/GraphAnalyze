@@ -86,24 +86,34 @@ private:
     bool *state;
 };
 
+#define MAX_DIFFEQ_DEGREE 10
+
 class DiffEqSolverModule : public Module
 {
 public:
     DiffEqSolverModule(bool *open, int windowWidth = 640, int windowHeight = 480)
         : open(open), w(windowWidth), h(windowHeight)
     {
-        fparser.DefineVar("x", &x);
-        gparser.DefineVar("x", &x);
+        for(unsigned int k = 0; k < MAX_DIFFEQ_DEGREE - 1; k++)
+            aParsers[k].DefineVar("x", &x);
+        bParser.DefineVar("x", &x);
     }
     virtual void render() override;
 private:
-    void solveDiffEq(double boundaryX, double boundaryY, double minX, double maxX, double dt);
+    void solveDiffEq(double boundaryX, double minX, double maxX, double dx);
     double x;
+    unsigned int degree = 1;
+    char aBufs[MAX_DIFFEQ_DEGREE][MAX_FUNC_LENGTH] = { { 0 } };
+    char bBuf[MAX_FUNC_LENGTH] = { 0 };
+    bool invalids[MAX_DIFFEQ_DEGREE - 1] = { false };
+    bool bInvalid = false;
+    mu::Parser aParsers[MAX_DIFFEQ_DEGREE - 1];
+    mu::Parser bParser;
+    double boundaryYs[MAX_DIFFEQ_DEGREE - 1] = { 0 };
     bool *open;
     GraphInfo gi;
     int w, h;
     std::vector<double> xs, ys;
-    mu::Parser fparser, gparser;
 };
 
 }
