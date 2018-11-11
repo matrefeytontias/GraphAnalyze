@@ -116,7 +116,7 @@ void GrapherModule::render()
 {
     const ImVec2 buttonSize = ImVec2(60, 30);
     
-    ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(w, h));
     if(!*open)
         return;
     if(!ImGui::Begin("Function graphing", open))

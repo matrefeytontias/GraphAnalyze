@@ -49,7 +49,7 @@ void DiffEqSolverModule::render()
     
     if(!*open)
         return;
-    ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(w, h));
     if(!ImGui::Begin("Differential equations solver", open))
     {
         ImGui::End();
