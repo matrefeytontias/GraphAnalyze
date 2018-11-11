@@ -14,9 +14,14 @@ using namespace GraphAnalyze;
 const int MAX_REPETITION = 8;
 const int MAX_POSSIBILITE = 4;
 bool *openProbaModule;
-int repetition = 1;
+int repetition = 0;
 int possibility = 2;
 int selectedPossibility = 1;
+bool showHistogram = false;
+bool showHistoTree = false;
+bool showTree = false;
+bool showField = true;
+float somme = 1;
 std::string selectedNode = " ";
 std::vector<float> histogramData;
 std::vector<float> histoData2;
@@ -87,32 +92,32 @@ float coefBino(float n, float k )
 
 void setupField()
 {
-    float somme = 0;
+     somme = 0;
     for(int i=0; i<possibility; i++)
     {
         somme += proba[i];
     }
     ImGui::InputInt("Number of repetition",&repetition);
     if(repetition < 0 )
-      repetition = 0;
+        repetition = 0;
     else if(repetition > MAX_REPETITION)
-      repetition = MAX_REPETITION;
+        repetition = MAX_REPETITION;
 
     ImVec4 color;
     if(somme -  1.0f < 0.0001f)
         color = ImVec4(.0f,.0f,.0f,1.f);
-    else{
+    else
+    {
         color = ImVec4(1.0f,.0f,.0f,1.f);
-        std::cout<<somme<<"  "<<std::endl;
-      }
+    }
 //    std::cout<<somme<<std::endl;
     ImGui::PushStyleColor(ImGuiCol_Text,color );
     if(ImGui::InputInt("Number of possibility",&possibility))
     {
-      if(possibility < 0 )
-        possibility = 0;
-      else if (possibility > MAX_POSSIBILITE)
-        possibility = MAX_POSSIBILITE;
+        if(possibility < 1 )
+            possibility = 1;
+        else if (possibility > MAX_POSSIBILITE)
+            possibility = MAX_POSSIBILITE;
         for(int i =0; i< possibility; i++)
         {
             if(possibility>(int)proba.size())
@@ -133,47 +138,59 @@ void setupField()
         ImGui::InputFloat(("Probability of possibility " + std::to_string(i+1)).c_str(),&proba[i],.0f,.0f,3);
         lineSize +=  possibilitySize + textSize + spacing;
         if(lineSize +possibilitySize + textSize + spacing < ImGui::GetWindowWidth())
-          ImGui::SameLine(.0f,5.f);
+            ImGui::SameLine(.0f,5.f);
         else
-          lineSize = ImGui::GetCursorPosX();
+            lineSize = ImGui::GetCursorPosX();
     }
     ImGui::PopItemWidth();
 
     ImGui::Text("Somme : %f",somme);
     ImGui::PopStyleColor();
     ImGui::Separator();
-    if(somme == 1.0f)
+        if(somme -  1.0f < 0.0001f)
     {
-        ImGui::PushItemWidth(ImGui::CalcTextSize(std::to_string(possibility*10).c_str()).x);
+        ImGui::PushItemWidth(100);
         ImGui::InputInt("Select possibility",&selectedPossibility);
         ImGui::PopItemWidth();
         if(selectedPossibility > 0 && selectedPossibility <= possibility)
         {
             histogramData.clear();
-            for(int i =0; i<=repetition; i++)
+            if(showHistogram)
             {
-                histogramData.push_back(coefBino(repetition,i)*pow(proba[selectedPossibility-1],i) * pow((1-proba[selectedPossibility-1]),(repetition-i)));
+                if(ImGui::Button("Hide histogram"))
+                {
+                    showHistogram = false;
+                }
+                for(int i =0; i<=repetition; i++)
+                {
+                    histogramData.push_back(coefBino(repetition,i)*pow(proba[selectedPossibility-1],i) * pow((1-proba[selectedPossibility-1]),(repetition-i)));
+                }
+                int histoWidth =ImGui::GetWindowWidth() - ImGui::GetCursorPosX()*2;
+                ImGui::PlotHistogram("Proba", &(histogramData[0]), histogramData.size(),0,NULL,.0f,1.f,ImVec2(histoWidth,200));
             }
-            int histoWidth =ImGui::GetWindowWidth() - ImGui::GetCursorPosX()*2;
-            ImGui::PlotHistogram("Proba", &(histogramData[0]), histogramData.size(),0,NULL,.0f,1.f,ImVec2(histoWidth,200));
+            else
+            {
+                if(ImGui::Button("Show histogram"))
+                {
+                    showHistogram = true;
+                }
+            }
         }
     }
 }
-
+ImVec2 nodeSpacing ;
 ImVec2 nodeSize = ImVec2(20,20);
-ImVec2 nodeSpacing = ImVec2(80,150);
+
 int posY;
 
-void addNode(int level,int number, ImVec2 treeSize,ImVec2 fullTreeSize,int numberNode,int count )
+void addNode(int level,int number,ImVec2 fullTreeSize,int numberNode,int count )
 {
-    treeSize = treeSize;
-    level = level;
     ImGui::SetCursorPosX(nodeSize.x * level + nodeSpacing.x * (level - 1));
     int spacing = fullTreeSize.y / (numberNode+1);
     ImGui::SetCursorPosY(posY + spacing * (number+1));
     const char *name = std::to_string(count).c_str();
     if(count ==0)
-        name = (const char*)((std::string)("")).c_str();
+        name = (const char*)((std::string)(" ")).c_str();
     ImVec4 baseColor = ImGui::GetStyle().Colors[ImGuiCol_Button];
     ImVec4 color = baseColor;
 
@@ -197,13 +214,16 @@ void addNode(int level,int number, ImVec2 treeSize,ImVec2 fullTreeSize,int numbe
     }
     name = tempName.c_str(); // ?
     ImGui::PushStyleColor(ImGuiCol_Button,color );
+
     if(ImGui::Button(name,nodeSize))
     {
         selectedNode = name;
     }
+    std::cout<<"2"<<"  "<<count<<std::endl;
     ImGui::SameLine();
-    if((level+1) == repetition)
+    if((level) == repetition+1)
     {
+      std::cout<<"1"<<"  "<<count<<std::endl;
         ImGui::Text("%f",totalProba);
         histoData2.push_back(totalProba);
         nameData2.push_back(count);
@@ -213,41 +233,44 @@ void addNode(int level,int number, ImVec2 treeSize,ImVec2 fullTreeSize,int numbe
 
 void setupTree()
 {
-
+  std::cout<<somme<<std::endl;
+      if(somme -  1.0f > 0.0001f)
+        return;
     int count = 0;
     std::queue<ImVec2> lastLevel;
+    int posX = ImGui::GetCursorPosX();
     posY = ImGui::GetCursorPosY();
+    ImVec2 windowSize = ImGui::GetWindowSize();
     ImVec2 windowPos = ImGui::GetWindowPos();
-    ImVec2 fullTreeSize = ImVec2(repetition *nodeSize.x + (repetition-1)*nodeSpacing.x,
-                                 pow(possibility,repetition-1) * nodeSize.y);
     ImVec2 treeSize;
     ImVec2 originPos;
     ImVec2 endPos;
+    ImVec2 fullTreeSize = ImVec2(windowSize.x - posX, windowSize.y - posY);
+    int totalNumberNode = pow(possibility,repetition);
+    nodeSpacing = ImVec2(((fullTreeSize.x - (nodeSize.x * (repetition+1)))/(repetition+1)),(fullTreeSize.y - (nodeSize.y*(totalNumberNode)))/totalNumberNode);
 
     float scrollX = ImGui::GetScrollX();
     float scrollY = ImGui::GetScrollY();
 
     histoData2.clear();
     nameData2.clear();
-    for(int i = 0 ; i< repetition; i++)
+    for(int i = 0 ; i<= repetition; i++)
     {
-        ImVec2 treeSize = ImVec2(i *nodeSize.x + (i-1)*nodeSpacing.x,
-                                 pow(possibility,i-1) * nodeSize.y);
-        int numberNode = pow(possibility,i-1);
+        int numberNode = pow(possibility,i);
         for(int j=0; j<numberNode; j++)
         {
-            addNode(i,j,treeSize,fullTreeSize,numberNode,count);
+            addNode(i+1,j,fullTreeSize,numberNode,count);
             count = addCount(count);
             ImGui::SetCursorPosY(posY);
 
-            endPos = ImVec2(nodeSize.x * i + nodeSpacing.x * (i - 1) + windowPos.x,
+            endPos = ImVec2(nodeSize.x * (i+1) + nodeSpacing.x * i + windowPos.x,
                             posY + (fullTreeSize.y / (numberNode+1)) * (j+1) + windowPos.y + nodeSize.y/2);
             for(int k=0; k<possibility; k++)
             {
                 ImVec2 lastLevelPos = ImVec2(endPos.x +nodeSize.x,endPos.y);
                 lastLevel.push(lastLevelPos);
             }
-            if(i>1)
+            if(i>0)
             {
                 ImVec2 startLine = lastLevel.front();
                 ImVec2 endLine = endPos;
@@ -267,31 +290,114 @@ void setupTree()
 
 }
 
+void addData(int count )
+{
+    const char *name = std::to_string(count).c_str();
+    if(count ==0)
+        name = (const char*)((std::string)(" ")).c_str();
+    float totalProba = 1;
+
+    for(unsigned int i =0 ; i<strlen(name); i++)
+    {
+        if(name[i]!=' ')
+            totalProba = totalProba * proba[atoi(&name[i])%10-1];
+    }
+        histoData2.push_back(totalProba);
+        nameData2.push_back(count);
+
+}
+
+void setupHisto()
+{
+  if(somme -  1.0f > 0.0001f)
+    return;
+    int count = 0;
+    std::queue<ImVec2> lastLevel;
+    histoData2.clear();
+    nameData2.clear();
+    for(int i = 0 ; i<= repetition; i++)
+    {
+        int numberNode = pow(possibility,i);
+        for(int j=0; j<numberNode; j++)
+        {
+            if((i+1) == (repetition+1))
+              addData(count);
+            count = addCount(count);
+        }
+    }
+}
+
+
 
 void ProbaModule::render()
 {
-
-  if(!(*openProbaModule))
-    return;
+    if(!(*openProbaModule))
+        return;
     if(!ImGui::Begin("Proba module",openProbaModule,ImGuiWindowFlags_HorizontalScrollbar))
     {
         ImGui::End();
         return;
     }
+    if(showField){
+      if(ImGui::Button("Hide field")){
+        showField = false;
+      }
     setupField();
+  }else{
+    if(ImGui::Button("Show field")){
+      showField = true;
+    }
+  }
     ImGui::Separator();
 
+    if(repetition >= 0 && possibility > 0 )
+    {
+            if(showHistoTree)
+            {
+              if(!showTree)
+                setupHisto();
+                if(ImGui::Button("Hide Histogram of all possibility"))
+                {
+                    showHistoTree = false;
+                }
+                if(histoData2.size()>0)
+                {
+                  if(somme -  1.0f < 0.0001f){
 
-    if(repetition > 0 && possibility > 0 ){
-    if(histoData2.size()>0){
-      int histoWidth = ImGui::GetWindowWidth() - ImGui::GetCursorPosX()*2;
-      ImGui::customHistogram("Proba of each branch",  &(histoData2[0]), histoData2.size(),&(nameData2[0]), ImVec2(histoWidth,200.f),&selectedNode);
-      }
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding,50.f);
+                int histoWidth = ImGui::GetWindowWidth() - ImGui::GetCursorPosX()*2;
+                ImGui::customHistogram("Proba of each branch",  &(histoData2[0]), histoData2.size(),&(nameData2[0]), ImVec2(histoWidth,200.f),&selectedNode);
+              }else
+              std::cout<<somme<<std::endl;
+              }
+            }
+            else
+            {
+                if(ImGui::Button("Show Histogram of all possibility"))
+                {
+                    showHistoTree = true;
+                }
+            }
 
-        setupTree();
-    ImGui::PopStyleVar();
-  }
+
+            if(showTree)
+            {
+                if(ImGui::Button("Hide tree"))
+                {
+                    showTree = false;
+                }
+                  ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding,50.f);
+                setupTree();
+                ImGui::PopStyleVar();
+            }
+            else
+            {
+                if(ImGui::Button("Show Tree"))
+                {
+                    showTree = true;
+                }
+            }
+
+        }
 
     ImGui::End();
 }

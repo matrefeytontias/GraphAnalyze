@@ -27,8 +27,6 @@
  }
 
 namespace ImGui{
-
-
   void plotCustomHistogram(const char* overlay_text,float (*values_getter)(void* data, int idx), void* data,int* listName, int values_count, float scale_min, float scale_max, ImVec2 graph_size, std::string *selectedBranch)
   {
     listName = listName;
@@ -75,6 +73,8 @@ namespace ImGui{
 
               if (pos1.x >= pos0.x + 2.0f)
                   pos1.x -= 1.0f;
+                int posY = pos1.y - graph_size.y * v1;
+                pos0.y = posY;
                 ImGui::SetCursorPos(pos0 -ImGui::GetWindowPos() + scroll);
                 if((std::to_string(listName[n]).compare(*selectedBranch))==0)
                     color = ImVec4(.1f,1.0f,.1f,1.f);
