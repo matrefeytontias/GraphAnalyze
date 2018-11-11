@@ -81,7 +81,6 @@ class HomeModule : public Module
 {
 public:
     HomeModule(bool *state_ptr) : state(state_ptr) { }
-    virtual ~HomeModule() override { }
     virtual void render() override;
 private:
     bool *state;
@@ -91,11 +90,20 @@ class DiffEqSolverModule : public Module
 {
 public:
     DiffEqSolverModule(bool *open, int windowWidth = 640, int windowHeight = 480)
-        : open(open), w(windowWidth), h(windowHeight) { }
+        : open(open), w(windowWidth), h(windowHeight)
+    {
+        fparser.DefineVar("x", &x);
+        gparser.DefineVar("x", &x);
+    }
     virtual void render() override;
 private:
+    void solveDiffEq(double boundaryX, double boundaryY, double minX, double maxX, double dt);
+    double x;
     bool *open;
+    GraphInfo gi;
     int w, h;
+    std::vector<double> xs, ys;
+    mu::Parser fparser, gparser;
 };
 
 }

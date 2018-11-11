@@ -51,6 +51,7 @@ void GraphAnalyze::GraphWidget(GraphInfo &gi, std::vector<double> &xs, std::vect
     origin = gi.scale(0, 0);
     
     drawList->AddRectFilled(top, bot, 0xffffffff);
+    ImGui::PushClipRect(top, bot, true);
     
     double xrange = gi.maxX - gi.minX,
         yrange = gi.maxY - gi.minY;
@@ -100,12 +101,16 @@ void GraphAnalyze::GraphWidget(GraphInfo &gi, std::vector<double> &xs, std::vect
     
     // Plot the actual function
     col32 = 0xff000000;
-    for(unsigned int k = 0; k + 1 < ys.size(); k++)
+    for(int k = 0; k + 1 < w; k++)
     {
-        drawList->AddLine(gi.scale(xs[k], ys[k]), gi.scale(xs[k + 1], ys[k + 1]),
-            col32, 1);
+        unsigned int i = std::lower_bound(xs.begin(), xs.end(), gi.unscale(k + gi.pos.x, 0).x) - xs.begin(),
+            j = std::lower_bound(xs.begin(), xs.end(), gi.unscale(k + 1 + gi.pos.x, 0).x) - xs.begin();
+        if(i < xs.size() && j < ys.size())
+            drawList->AddLine(gi.scale(xs[i], ys[i]), gi.scale(xs[j], ys[j]),
+                col32, 1);
     }
     
+    ImGui::PopClipRect();
     // Make the widget react like an actual ImGui widget wrt interaction
     ImGui::InvisibleButton("PlotArea", ImVec2(w, h));
 }

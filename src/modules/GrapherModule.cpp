@@ -14,7 +14,7 @@ using namespace GraphAnalyze;
 GrapherModule::GrapherModule(bool *open, int windowWidth, int windowHeight) : open(open), w(windowWidth), h(windowHeight), ism(this)
 {
     p.DefineVar("x", &x);
-    p.SetExpr("x^2 + x + 1");
+    p.SetExpr("0");
     
     for(int k = 0; k <= PLOT_INTERVALS; k++)
         xs.push_back(2. * k / PLOT_INTERVALS - 1.);
