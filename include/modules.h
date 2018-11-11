@@ -2,7 +2,6 @@
 #define INC_MODULES
 
 #include <algorithm>
-#include <functional>
 #include <numeric>
 #include <vector>
 
@@ -60,8 +59,6 @@ class GrapherModule : public Module
 public:
     GrapherModule(bool *open, int windowWidth = 640, int windowHeight = 480);
     virtual void render() override;
-    bool userSelectArea(float *startX, float *endX, bool persistent = false, bool allowOverlap = false,
-        std::function<void(float, float)> selectionDrawer = nullptr);
 private:
     bool *open;
     GraphInfo gi;

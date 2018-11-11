@@ -1,6 +1,7 @@
 #ifndef INC_GRAPH_WIDGET
 #define INC_GRAPH_WIDGET
 
+#include <functional>
 #include <numeric>
 #include <vector>
 
@@ -74,6 +75,19 @@ typedef struct
  */
 void GraphWidget(GraphInfo &gi, std::vector<double> &xs, std::vector<double> &ys,
     int w, int h);
+
+/**
+ * Lets the user select an area in a graph widget by clicking and dragging with
+ * the left mouse button. Writes coordinates in function space. Returns true when
+ * the user is done selecting.
+ * Optionally takes a flag telling whether the selected area should be drawn persistently
+ * in-between selects.
+ * Optionally takes a function of two floats that handles drawing the selection.
+ * If omitted, draws a standard semi-transparent green rectangle.
+ * /!\ This needs a graph widget to be the last drawn widget.
+ */
+bool userSelectArea(GraphInfo &gi, float *startX, float *endX, bool persistent = false,
+    bool allowOverlap = false, std::function<void(float, float)> selectionDrawer = nullptr);
 
 /**
  * A special InputText that queries a function that mu::Parser can recognize, and

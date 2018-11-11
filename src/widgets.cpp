@@ -110,6 +110,50 @@ void GraphAnalyze::GraphWidget(GraphInfo &gi, std::vector<double> &xs, std::vect
     ImGui::InvisibleButton("PlotArea", ImVec2(w, h));
 }
 
+bool GraphAnalyze::userSelectArea(GraphInfo &gi, float *startX, float *endX,
+    bool persistent, bool allowOverlap, std::function<void(float, float)> selectionDrawer)
+{
+    static bool selecting = false;
+    
+    if(*startX < gi.minX)
+        *startX = gi.minX;
+    if(*endX > gi.maxX)
+        *endX = gi.maxX;
+    
+    if(ImGui::IsItemHovered())
+    {
+        if(ImGui::IsMouseClicked(0))
+        {
+            selecting = true;
+            *startX = *endX = gi.unscale(ImGui::GetMousePos()).x;
+        }
+        
+        if(ImGui::IsMouseDown(0))
+            *endX = allowOverlap ? gi.unscale(ImGui::GetMousePos()).x
+                : std::max(*startX, gi.unscale(ImGui::GetMousePos()).x);
+    }
+    
+    if(selecting || persistent)
+    {
+        ImDrawList *drawList = ImGui::GetWindowDrawList();
+        
+        ImVec2 rectMin = gi.scale(*startX, gi.maxY),
+            rectMax = gi.scale(*endX, gi.minY);
+        if(selectionDrawer)
+            selectionDrawer(rectMin.x, rectMax.x);
+        else
+            drawList->AddRectFilled(rectMin, rectMax, 0x8800ff00);
+    }
+    
+    if(selecting && !ImGui::IsMouseDown(0))
+    {
+        selecting = false;
+        return true;
+    }
+    
+    return false;
+}
+
 bool GraphAnalyze::InputFunction(const char *label, char *buf, size_t size, mu::Parser &p, bool *invalid)
 {
     bool valueChanged = ImGui::InputText(label, buf, size);
