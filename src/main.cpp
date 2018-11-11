@@ -81,25 +81,25 @@ int _main(int, char *argv[])
     glViewport(0, 0, display_w, display_h);
 
     trace("Entering drawing loop");
-    
+
     bool state[MODULES_NB] = { false };
-    
+
     vector<GraphAnalyze::Module*> modules({ new GraphAnalyze::GrapherModule(&state[0]),
-        nullptr, nullptr, nullptr });
-    
+        nullptr, nullptr, new GraphAnalyze::ProbaModule(&state[3]) });
+
     GraphAnalyze::HomeModule homeModule(state);
-    
+
     while (!glfwWindowShouldClose(window))
     {
         ImGui_ImplGlfwGL3_NewFrame();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
+
         homeModule.render();
         for(GraphAnalyze::Module *m : modules)
             if(m)
                 m->render();
-        
+
         ImGui::Render();
         ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);

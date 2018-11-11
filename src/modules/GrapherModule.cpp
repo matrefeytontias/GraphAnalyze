@@ -45,7 +45,7 @@ GrapherModule::GrapherModule(bool *open, int windowWidth, int windowHeight) : op
 {
     p.DefineVar("x", &x);
     p.SetExpr("x^2 + x + 1");
-    
+
     for(int k = 0; k <= PLOT_INTERVALS; k++)
         xs.push_back(2. * k / PLOT_INTERVALS - 1.);
 }
@@ -106,21 +106,21 @@ void GrapherModule::plotFunction(int w, int h)
     ImDrawList *drawList = ImGui::GetWindowDrawList();
     ImVec2 top = gi.pos, bot(gi.pos.x + gi.size.x, gi.pos.y + gi.size.y),
     origin = gi.scale(0, 0);
-    
+
     drawList->AddRectFilled(top, bot, 0xffffffff);
-    
+
     double xrange = gi.maxX - gi.minX,
         yrange = gi.maxY - gi.minY;
     std::string s = toString((gi.minX + gi.maxX) / 2);
-    
+
     // Draw the axis system
     int xTickSpace = (int)ImGui::CalcTextSize("0.00000").x,
         yTickSpace = (int)ImGui::CalcTextSize("0.000").x;
     ImU32 col32 = 0xff888888;
-    
+
     drawList->AddLine(ImVec2(origin.x, top.y), ImVec2(origin.x, top.y + h), col32, 1);
     drawList->AddLine(ImVec2(top.x, origin.y), ImVec2(top.x + w, origin.y), col32, 1);
-    
+
     // Draw the X axis' ticks
     int nbTicks = std::max(1, (w / xTickSpace) & ~1);
     for(int k = 0; k <= nbTicks; k++)
@@ -136,7 +136,7 @@ void GrapherModule::plotFunction(int w, int h)
                 col32, s.c_str());
         }
     }
-    
+
     // Draw the Y axis' ticks
     if(yrange > 0)
     {
@@ -154,7 +154,7 @@ void GrapherModule::plotFunction(int w, int h)
             }
         }
     }
-    
+
     // Plot the actual function
     col32 = 0xff000000;
     for(unsigned int k = 0; k + 1 < ys.size(); k++)
@@ -195,23 +195,23 @@ void GrapherModule::plotTangent(float length)
         ImVec2 df(np.x - p.x, np.y - p.y);
         float l = sqrt(df.x * df.x + df.y * df.y);
         df.x /= l; df.y /= l;
-        
+
         ImVec2 origin = gi.scale(xs[index], ys[index]);
-        
+
         drawList->AddLine(ImVec2(origin.x, gi.pos.y), ImVec2(origin.x, gi.pos.y + gi.size.y),
             0xff0000ff, 1);
         drawList->AddLine(ImVec2(origin.x - df.x * length, origin.y - df.y * length),
             ImVec2(origin.x + df.x * length, origin.y + df.y * length), 0xff0000ff,
             4);
-        
+
         // Add orthonormal view of the tangent
         df = ImVec2(xs[index + 1] - xs[index], ys[index + 1] - ys[index]);
         l = sqrt(df.x * df.x + df.y * df.y);
         df.x /= l; df.y /= l;
-        
+
         ImVec2 textSize = ImGui::CalcTextSize("Orthonormal");
         float orthoLen = (textSize.x - textSize.y) / 2;
-        
+
         ImVec2 boxBase(gi.pos.x + gi.size.x - textSize.x - 3, 0);
         boxBase.y = origin.x + length > boxBase.x && origin.y - length < gi.pos.y + textSize.x
             ? gi.pos.y + gi.size.y - textSize.x - 1 : gi.pos.y - 1;
@@ -221,9 +221,9 @@ void GrapherModule::plotTangent(float length)
         drawList->AddRectFilled(ImVec2(boxBase.x + 1, boxBase.y + 1),
             ImVec2(boxBase.x + textSize.x + 2, boxBase.y + textSize.x + 1),
             0xffffffff);
-        
+
         drawList->AddText(ImVec2(boxBase.x + 1, boxBase.y + 1), 0xff000000, "Orthonormal");
-        
+
         ImVec2 orthoBase(boxBase.x + textSize.x / 2, boxBase.y + textSize.y + orthoLen);
         drawList->AddLine(ImVec2(orthoBase.x - df.x * orthoLen, orthoBase.y + df.y * orthoLen),
             ImVec2(orthoBase.x + df.x * orthoLen, orthoBase.y - df.y * orthoLen), 0xff0000ff, 4);
@@ -248,16 +248,16 @@ bool GrapherModule::userSelectArea(float *startX, float *endX, bool persistent, 
             selecting = true;
             *startX = *endX = gi.unscale(ImGui::GetMousePos()).x;
         }
-        
+
         if(ImGui::IsMouseDown(0))
             *endX = allowOverlap ? gi.unscale(ImGui::GetMousePos()).x
                 : std::max(*startX, gi.unscale(ImGui::GetMousePos()).x);
     }
-    
+
     if(selecting || persistent)
     {
         ImDrawList *drawList = ImGui::GetWindowDrawList();
-        
+
         ImVec2 rectMin = gi.scale(*startX, gi.maxY),
             rectMax = gi.scale(*endX, gi.minY);
         if(selectionDrawer)
@@ -265,13 +265,13 @@ bool GrapherModule::userSelectArea(float *startX, float *endX, bool persistent, 
         else
             drawList->AddRectFilled(rectMin, rectMax, 0x8800ff00);
     }
-    
+
     if(selecting && !ImGui::IsMouseDown(0))
     {
         selecting = false;
         return true;
     }
-    
+
     return false;
 }
 
@@ -303,7 +303,7 @@ inline ImU32 clerp(ImVec4 &a, ImVec4 &b, float v)
 void GrapherModule::render()
 {
     const ImVec2 buttonSize = ImVec2(60, 30);
-    
+
     ImGui::SetNextWindowSize(ImVec2(w, h), ImGuiCond_FirstUseEver);
     if(!*open)
         return;
@@ -312,17 +312,17 @@ void GrapherModule::render()
         ImGui::End();
         return;
     }
-    
+
     const int hSpacing = ImGui::GetStyle().ItemSpacing.x,
         vSpacing = ImGui::GetStyle().ItemSpacing.y,
         windowW = ImGui::GetWindowWidth(),
         windowH = ImGui::GetWindowHeight();
-    
+
     float startPos = (windowW - ImGui::CalcTextSize("General Tools").x) / 2;
     ImGui::SetCursorPosX(startPos);
-    
+
     ImGui::Text("General Tools");
-    
+
     ImGui::SetCursorPosX((windowW - (buttonSize.x * 4 + hSpacing * 3)) / 2);
     if(ImGui::Button("Open", buttonSize))
     {
@@ -357,7 +357,7 @@ void GrapherModule::render()
     ImGui::BeginGroup();
         int startPosGraph = ImGui::GetCursorPosX();
         static bool valueChanged = false;
-        
+
         ImGui::PushItemWidth(windowW - startPosGraph - hSpacing * 2 - ImGui::CalcTextSize(" = f(x)").x);
             if(valueChanged |= flashWidget(invalidFunc, 0xff0000ff, ImGui::InputText(" = f(x)", buf, MAX_FUNC_LENGTH)))
                 invalidFunc = false;

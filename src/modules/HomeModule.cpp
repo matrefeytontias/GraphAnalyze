@@ -53,9 +53,9 @@ void HomeModule::render()
                     ImGui::Text("Solve 1st order linear\ndifferential equations");
                 ImGui::EndGroup(); //end first module
                 ImGui::BeginGroup(); //second module
-                    if(ImGui::Button("Module4",sizeButtonModule))
+                    if(ImGui::Button("Proba Module",sizeButtonModule))
                         (state)[3]=true;
-                    ImGui::Text("Description module4 \n ...");
+                    ImGui::Text("Compute & visuale proba ");
                 ImGui::EndGroup(); //end second module
             ImGui::EndGroup();  //End 2nd column
         ImGui::EndGroup(); //module list end

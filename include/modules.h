@@ -25,7 +25,7 @@ typedef struct
         pos = ImGui::GetCursorScreenPos();
         size = w < 0 || h < 0 ? ImGui::GetContentRegionAvail() : ImVec2(w, h);
     }
-    
+
     /**
      * Builds the graph info from arrays of X and Y.
      */
@@ -48,12 +48,12 @@ typedef struct
         return ImVec2((x - minX) * (size.x - 1) / (maxX - minX) + pos.x,
             size.y - (y - minY) * (size.y - 1) / (maxY - minY) + pos.y);
     }
-    
+
     inline ImVec2 scale(ImVec2 a)
     {
         return scale(a.x, a.y);
     }
-    
+
     /**
      * Maps an (x, y) value in graph space to function space.
      */
@@ -62,7 +62,7 @@ typedef struct
         return ImVec2((x - pos.x) * (maxX - minX) / (size.x - 1) + minX,
             (y - pos.y) * (maxY - minY) / (size.y - 1) + minY);
     }
-    
+
     inline ImVec2 unscale(ImVec2 a)
     {
         return unscale(a.x, a.y);
@@ -146,6 +146,14 @@ public:
 private:
     bool *state;
 };
+
+class ProbaModule : public Module
+{
+public:
+    ProbaModule(bool *b);
+    virtual void render() override;
+};
+
 
 }
 
