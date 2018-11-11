@@ -58,7 +58,8 @@ int _main(int, char *argv[])
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    GLFWwindow *window = glfwCreateWindow(1280, 720, "Graph&Analyze", NULL, NULL);
+    const GLFWvidmode *videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+    GLFWwindow *window = glfwCreateWindow(videoMode->width, videoMode->height, "Graph&Analyze", glfwGetPrimaryMonitor(), NULL);
     glfwMakeContextCurrent(window);
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
     glfwSwapInterval(1); // Enable vsync
