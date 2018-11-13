@@ -115,7 +115,7 @@ void DiffEqSolverModule::render()
         ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered],
         sin(glfwGetTime() * M_PI * 2) / 2. + 0.5);
     if(flashButtonWidget(valueChanged, graphButtonColor, ImGui::Button("Solve")) && minX < maxX
-        && !invalidF && !invalidG)
+        && !invalidF && !invalidG && fbuf[0] != '\0' && gbuf[0] != '\0')
     {
         solveDiffEq(boundaryX, boundaryY, minX, maxX, dx);
         valueChanged = false;
