@@ -11,44 +11,90 @@
 using namespace GraphAnalyze;
 
 /**
- * Fills the class' variables with the numerically solved diff eq.
+ * Fills the class' variables with the numerically solved differential equation,
+ * namely `xs`, `ys` and `gi`.
+ * @param   boundaryX   X coordinate of the boundary conditions
+ * @param   minX        low bound of the solving range
+ * @param   maxX        high bound of the solving range
+ * @param   dx          solving step
  */
 void DiffEqSolverModule::solveDiffEq(double boundaryX, double minX, double maxX,
     double dx)
 {
-    (void)boundaryX;
-    (void)minX;
-    (void)maxX;
-    (void)dx;
-    /*
+    std::vector<double> vs, nextvs;
+    nextvs.resize(degree);
+    
     // 1st order forward Euler
-    // y' + fy = g <=> y_n+1 = (g(x_n) - f(x_n)y_n) * dx + y_n
+    // y' + fy = g <=> y_n+1 = (g_n - f_n * y_n) * dx + y_n
+    
+    // nth-degree diff eq : y'n + sum(k in 0 ... n-1, a_k * y'k) = b
+    // Reduce nth-degree diff eq to n 1st-degree diff eqs
+    // v_k := y'k for k in 0 ... n-1
+    // n-1 diff eqs : v_k' = v_k+1 for k in 0 ... n-2
+    // 1 more diff eq : v_n-1' + sum(k in 0 ... n-1, a_k * v_k) = b
+    
+    // Parallel 1st-order forward Euler
+    // v_n-1_n+1 = (b_n - sum(k in 0 ... n-1, a_k_n * v_k_n)) * dx + v_n-1_n
+    // for k in 0 ... n-2, v_k_n+1 = v_k+1_n * dx + v_k_n
+    
     xs.clear();
     ys.clear();
     xs.push_back(boundaryX);
-    ys.push_back(boundaryY);
+    ys.push_back(boundaryYs[0]);
+    for(unsigned int k = 0; k < degree; k++)
+        vs.push_back(boundaryYs[k]);
+    
     // Go both ways from boundaryX
     // Do it this way for maximum array construction efficiency
+    // boundaryX -> minX
     dx *= -1;
     for(x = boundaryX; x > minX; x += dx)
     {
-        float y_n = ys.back();
         xs.push_back(x + dx);
-        ys.push_back((gparser.Eval() - fparser.Eval() * y_n) * dx + y_n);
+        // Compute v_n-1_n+1 at the same time as all the other v_k_n
+        nextvs[degree - 1] = bParser.Eval();
+        for(unsigned int k = 0; k < degree - 1; k++)
+        {
+            nextvs[degree - 1] -= aParsers[k].Eval() * vs[k];
+            nextvs[k] = vs[k + 1] * dx + vs[k];
+        }
+        // Extra iteration for k = n-1
+        nextvs[degree - 1] -= aParsers[degree - 1].Eval() * vs[degree - 1];
+        nextvs[degree - 1] *= dx;
+        nextvs[degree - 1] += vs[degree - 1];
+        // By construction, v_0 = y
+        ys.push_back(nextvs[0]);
+        
+        for(unsigned int k = 0; k < degree; k++)
+            vs[k] = nextvs[k];
     }
     std::reverse(xs.begin(), xs.end());
     std::reverse(ys.begin(), ys.end());
     
+    // Restore the boundary values
+    for(unsigned int k = 0; k < degree; k++)
+        vs[k] = boundaryYs[k];
+    
+    // boundaryX -> maxX
     dx *= -1;
     for(x = boundaryX; x < maxX; x += dx)
     {
-        float y_n = ys.back();
         xs.push_back(x + dx);
-        ys.push_back((gparser.Eval() - fparser.Eval() * y_n) * dx + y_n);
+        nextvs[degree - 1] = bParser.Eval();
+        for(unsigned int k = 0; k < degree - 1; k++)
+        {
+            nextvs[degree - 1] -= aParsers[k].Eval() * vs[k];
+            nextvs[k] = vs[k + 1] * dx + vs[k];
+        }
+        nextvs[degree - 1] -= aParsers[degree - 1].Eval() * vs[degree - 1];
+        nextvs[degree - 1] *= dx;
+        nextvs[degree - 1] += vs[degree - 1];
+        ys.push_back(nextvs[0]);
+        for(unsigned int k = 0; k < degree; k++)
+            vs[k] = nextvs[k];
     }
     
     gi.build(xs, ys);
-    */
 }
 
 void DiffEqSolverModule::render()
@@ -98,6 +144,7 @@ void DiffEqSolverModule::render()
     
     eqText += " = b(x)";
     
+    ImGui::Text("Equation degree : %d", degree); ImGui::SameLine();
     if(ImGui::Button("+##degreeUp"))
         degree += degree < MAX_DIFFEQ_DEGREE;
     ImGui::SameLine();
@@ -105,7 +152,9 @@ void DiffEqSolverModule::render()
         degree -= degree > 1;
     
     ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[2]);
+    ImGui::PushTextWrapPos();
         ImGui::Text(eqText.c_str());
+    ImGui::PopTextWrapPos();
     ImGui::PopFont();
     ImGui::Separator();
     
@@ -137,7 +186,7 @@ void DiffEqSolverModule::render()
     {
         // Needed in case the previous tree nodes are collapsed
         nestedStartPos = ImGui::GetCursorPos();
-        ImGui::PushItemWidth(windowW / 2 - nestedStartPos.x - ImGui::CalcTextSize("Boundary y'9(x)").x);
+        ImGui::PushItemWidth(windowW / 2 - nestedStartPos.x - ImGui::CalcTextSize("Boundary y'9(x) ").x);
             valueChanged |= flashWidget(minX >= maxX, 0xff0000ff,
                 ImGui::DragFloat("Min X", &minX, 0.1f, -FLT_MAX, maxX));
             ImGui::SameLine();
@@ -170,8 +219,8 @@ void DiffEqSolverModule::render()
     if(flashButtonWidget(valueChanged, graphButtonColor, ImGui::Button("Solve")) && minX < maxX
         && !anyInvalid)
     {
-        // solveDiffEq(boundaryX, boundaryY, minX, maxX, dx);
-        // valueChanged = false;
+        solveDiffEq(boundaryX, minX, maxX, dx);
+        valueChanged = false;
     }
     
     if(gi.ready)
