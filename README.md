@@ -12,3 +12,7 @@ Easy like that.
 
 Install the package `libglfw3-dev`, and run `make` to compile or `make run` to
 compile and run. Even easier !
+
+### Building the documentation
+
+Install the `doxygen` package, and run `make docs`.

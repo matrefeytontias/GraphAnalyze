@@ -1,5 +1,6 @@
 UNAME_S := $(shell uname -s)
 CC := gcc
+DOXYGEN := doxygen
 CFLAGS := -Iinclude -Iinclude/mu -c -g -Wall -Wextra -Werror -Wno-int-in-bool-context -Wno-misleading-indentation -Wno-shift-negative-value -Wno-attributes -DMUPARSER_STATIC
 CPPFLAGS := -std=c++11
 ifeq ($(UNAME_S), Linux)
@@ -12,6 +13,7 @@ DEPFLAGS = -MT $@ -MMD -MP -MF $(OBJDIR)/$*.d
 OUTDIR := bin
 DLLDIR := deploy
 EXEC_NAME := $(OUTDIR)/GraphAnalyze
+DOXYGEN_CONFIG := GraphAnalyzeDoc
 RESDIR := res
 SRCDIR := src
 OBJDIR := obj
@@ -19,7 +21,7 @@ SOURCES := $(wildcard $(SRCDIR)/*.c* $(SRCDIR)/*/*.c*)
 OBJS := $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o, $(SOURCES))
 OBJS := $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o, $(OBJS))
 
-.PHONY: all clean run $(RESDIR)
+.PHONY: all clean docs run $(RESDIR)
 
 all: $(OBJDIR) $(OBJDIR) $(OUTDIR) $(EXEC_NAME)
 	@cp -r $(DLLDIR)/* $(OUTDIR)
@@ -34,6 +36,9 @@ clean:
 run: all
 	@echo ">>> Running $(EXEC_NAME) ..."
 	@$(EXEC_NAME)
+
+docs:
+	@$(DOXYGEN) $(DOXYGEN_CONFIG)
 
 $(OUTDIR):
 	@mkdir $(OUTDIR)
