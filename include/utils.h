@@ -6,7 +6,38 @@
 #include <string>
 #include <sstream>
 
+#include "imgui.h"
 #include "glad/glad.h"
+
+/**
+ * Makes an ImGui call with a colored background if a flag is set.
+ * Uses GCC's non-standard statement expression extension.
+ */
+#define flashWidget(flag, color, call) \
+({\
+    bool f = flag;\
+    if(f)\
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, color);\
+    bool textModified = call;\
+    if(f)\
+        ImGui::PopStyleColor();\
+    textModified;\
+})
+
+/**
+ * Makes an ImGui call with a colored button color if a flag is set.
+ * Uses GCC's non-standard statement expression extension.
+ */
+#define flashButtonWidget(flag, color, call) \
+({\
+    bool f = flag;\
+    if(f)\
+        ImGui::PushStyleColor(ImGuiCol_Button, color);\
+    bool textModified = call;\
+    if(f)\
+        ImGui::PopStyleColor();\
+    textModified;\
+})
 
 void setwd(char **argv);
 std::string getFileContents(const char *path);

@@ -11,8 +11,7 @@ using namespace GraphAnalyze;
 
 /**
  * Renders the submodule and performs action.
- * /!\ This needs the invisible button over the graph area in the GrapherModule
- * to be the last drawn widget.
+ * /!\ This needs a graph widget to be the last drawn widget.
  */
 void IntegrationSubModule::render()
 {
@@ -21,8 +20,8 @@ void IntegrationSubModule::render()
     if(active)
     {
         // Select area first because we need the graph area to be the last drawn widget
-        parent->userSelectArea(&startX, &endX, true, true, [=](float a, float b) { this->selectionDrawer(a, b); });
-
+        GraphAnalyze::userSelectArea(parent->gi, &startX, &endX, true, true, [=](float a, float b) { this->selectionDrawer(a, b); });
+        
         ImGui::Begin("Numerical integration", &active, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::Text("Please select boundaries in the graph area.");
         std::ostringstream ss;
