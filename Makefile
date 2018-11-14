@@ -1,7 +1,7 @@
 UNAME_S := $(shell uname -s)
 CC := gcc
 DOXYGEN := doxygen
-CFLAGS := -Iinclude -Iinclude/mu -c -g -Wall -Wextra -Werror -Wno-int-in-bool-context -Wno-misleading-indentation -Wno-shift-negative-value -Wno-attributes -DMUPARSER_STATIC
+CFLAGS := -Iinclude -Iinclude/mu -c -g -Wall -Wextra -Werror -Wno-int-in-bool-context -Wno-misleading-indentation -Wno-shift-negative-value -Wno-attributes -Wno-format-security -DMUPARSER_STATIC
 CPPFLAGS := -std=c++11
 ifeq ($(UNAME_S), Linux)
 	LDFLAGS := -lstdc++ -lm -lglfw
