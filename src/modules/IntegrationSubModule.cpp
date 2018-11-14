@@ -16,7 +16,7 @@ using namespace GraphAnalyze;
 void IntegrationSubModule::render()
 {
     parent->canHandleClick(!active);
-    
+
     if(active)
     {
         // Select area first because we need the graph area to be the last drawn widget
@@ -26,7 +26,7 @@ void IntegrationSubModule::render()
         ImGui::Text("Please select boundaries in the graph area.");
         std::ostringstream ss;
         ss << "Integrating from " << startX << " to " << endX;
-        ImGui::Text(ss.str().c_str());
+        ImGui::Text("%s",ss.str().c_str());
         double rangeX = parent->gi.maxX - parent->gi.minX;
         std::vector<double> &xs = parent->xs,
             &ys = parent->ys;
@@ -41,7 +41,7 @@ void IntegrationSubModule::render()
             result *= -1;
         ss.str("");
         ss << "Result : " << result;
-        ImGui::Text(ss.str().c_str());
+        ImGui::Text("%s",ss.str().c_str());
         ImGui::End();
     }
 }
@@ -53,11 +53,11 @@ void IntegrationSubModule::render()
 {
     ImDrawList *drawList = ImGui::GetWindowDrawList();
     std::vector<double> &ys = parent->ys;
-    
+
     float originY = parent->gi.scale(0, 0).y,
         xmin = std::min(x1, x2),
         xmax = std::max(x1, x2);
-    
+
     for(float x = xmin; x <= xmax; x += 1.f)
     {
         int index = (int)((x - parent->gi.pos.x) * PLOT_INTERVALS / parent->gi.size.x);

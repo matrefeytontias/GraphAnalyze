@@ -74,23 +74,23 @@ void GrapherModule::plotTangent(float length)
         ImVec2 df(np.x - p.x, np.y - p.y);
         float l = sqrt(df.x * df.x + df.y * df.y);
         df.x /= l; df.y /= l;
-        
+
         ImVec2 origin = gi.scale(xs[index], ys[index]);
-        
+
         drawList->AddLine(ImVec2(origin.x, gi.pos.y), ImVec2(origin.x, gi.pos.y + gi.size.y),
             0xff0000ff, 1);
         drawList->AddLine(ImVec2(origin.x - df.x * length, origin.y - df.y * length),
             ImVec2(origin.x + df.x * length, origin.y + df.y * length), 0xff0000ff,
             4);
-        
+
         // Add orthonormal view of the tangent
         df = ImVec2(xs[index + 1] - xs[index], ys[index + 1] - ys[index]);
         l = sqrt(df.x * df.x + df.y * df.y);
         df.x /= l; df.y /= l;
-        
+
         ImVec2 textSize = ImGui::CalcTextSize("Orthonormal");
         float orthoLen = (textSize.x - textSize.y) / 2;
-        
+
         ImVec2 boxBase(gi.pos.x + gi.size.x - textSize.x - 3, 0);
         boxBase.y = origin.x + length > boxBase.x && origin.y - length < gi.pos.y + textSize.x
             ? gi.pos.y + gi.size.y - textSize.x - 1 : gi.pos.y - 1;
@@ -100,9 +100,9 @@ void GrapherModule::plotTangent(float length)
         drawList->AddRectFilled(ImVec2(boxBase.x + 1, boxBase.y + 1),
             ImVec2(boxBase.x + textSize.x + 2, boxBase.y + textSize.x + 1),
             0xffffffff);
-        
+
         drawList->AddText(ImVec2(boxBase.x + 1, boxBase.y + 1), 0xff000000, "Orthonormal");
-        
+
         ImVec2 orthoBase(boxBase.x + textSize.x / 2, boxBase.y + textSize.y + orthoLen);
         drawList->AddLine(ImVec2(orthoBase.x - df.x * orthoLen, orthoBase.y + df.y * orthoLen),
             ImVec2(orthoBase.x + df.x * orthoLen, orthoBase.y - df.y * orthoLen), 0xff0000ff, 4);
@@ -124,17 +124,17 @@ void GrapherModule::render()
         ImGui::End();
         return;
     }
-    
+
     const int hSpacing = ImGui::GetStyle().ItemSpacing.x,
         vSpacing = ImGui::GetStyle().ItemSpacing.y,
         windowW = ImGui::GetWindowWidth(),
         windowH = ImGui::GetWindowHeight();
-    
+
     float startPos = (windowW - ImGui::CalcTextSize("General Tools").x) / 2;
     ImGui::SetCursorPosX(startPos);
-    
+
     ImGui::Text("General Tools");
-    
+
     ImGui::SetCursorPosX((windowW - (buttonSize.x * 4 + hSpacing * 3)) / 2);
     if(ImGui::Button("Open", buttonSize))
     {

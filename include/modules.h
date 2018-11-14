@@ -188,6 +188,17 @@ private:
     bool *state;
 };
 
+/**
+ * Probabilities module. Allows one to visualize and compare probabilities of
+ * different numbers of outcomes of a repeated experience.
+ */
+class ProbaModule : public Module
+{
+public:
+    ProbaModule(bool *b);
+    virtual void render() override;
+};
+
 #define MAX_DIFFEQ_DEGREE 10
 
 /**
