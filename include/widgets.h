@@ -17,12 +17,13 @@ namespace GraphAnalyze
 typedef struct
 {
     /**
-     * Position and size of the graph in an ImGUI window.
+     * Position of the graph in an ImGUI window.
      */
-    ImVec2 pos, size;
+    ImVec2 pos;
     /**
-     * Current boundaries of the coordinate arrays.
+     * Size of the graph.
      */
+    ImVec2 size;
     double minX = -1., maxX = 1., minY, maxY;
     /**
      * Tells whether the structure contains enough data to plot a function.
@@ -109,7 +110,7 @@ void GraphWidget(GraphInfo &gi, std::vector<double> &xs, std::vector<double> &ys
  * @param   endX            where to write the end of the selected range
  * @param   persistent      whether the selected area should be drawn persistently in-between selects
  * @param   allowOverlap    whether to allow startX > endX
- * @param   selectionDrawer function of two floats that handles drawing the selection.\
+ * @param   selectionDrawer function of two floats that handles drawing the selection.
                             If omitted, draws a standard semi-transparent green rectangle
  * @return  true when the user is done selecting
  */

@@ -76,9 +76,13 @@ private:
      */
     void selectionDrawer(float x1, float x2);
     /**
-     * Start and end of the selection.
+     * Start of the selection.
      */
-    float startX = -1, endX = 1;
+    float startX = -1;
+    /**
+     * End of the selection.
+     */
+    float endX = 1;
 };
 
 /**
@@ -88,10 +92,22 @@ class GrapherModule : public Module
 {
     friend IntegrationSubModule;
 public:
+    /**
+     * Constructs the module.
+     * @param   open            pointer to a boolean indicating whether the window should render
+     * @param   windowWidth     width of the window
+     * @param   windowHeight    height of the window
+     */
     GrapherModule(bool *open, int windowWidth = 640, int windowHeight = 480);
     virtual void render() override;
 private:
+    /**
+     * Tells whether the window should render.
+     */
     bool *open;
+    /**
+     * GraphInfo object pertaining to the current function.
+     */
     GraphInfo gi;
     /**
      * Reapplies the contents of the function to the graph info and the coordinate
@@ -112,9 +128,13 @@ private:
      */
     void plotTangent(float length = 50);
     /**
-     * Window dimensions.
+     * Window width.
      */
-    int w, h;
+    int w;
+    /**
+     * Window height.
+     */
+    int h;
     /**
      * Parser for the function's expression.
      */
@@ -122,11 +142,19 @@ private:
     /**
      * Boundaries for the graphing range.
      */
-    float minX = -1, maxX = 1;
+    float minX = -1;
     /**
-     * Coordinate arrays for the function graph.
+     * Boundaries for the graphing range.
      */
-    std::vector<double> xs, ys;
+    float maxX = 1;
+    /**
+     * Abscissae for the function graph.
+     */
+    std::vector<double> xs;
+    /**
+     * Ordinates for the function graph.
+     */
+    std::vector<double> ys;
     /**
      * Parameter for the function's parser evaluations.
      */
@@ -230,13 +258,21 @@ private:
      */
     GraphInfo gi;
     /**
-     * Window dimensions.
+     * Window width.
      */
-    int w, h;
+    int w;
     /**
-     * Abscissa and ordinate of the solution.
+     * Window height.
      */
-    std::vector<double> xs, ys;
+    int h;
+    /**
+     * Abscissae of the solution.
+     */
+    std::vector<double> xs;
+    /**
+     * Ordinates of the solution.
+     */
+    std::vector<double> ys;
 };
 
 }
