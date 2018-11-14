@@ -301,11 +301,9 @@ void addData(int count )
 
         }
     }
-    std::cout<<tempName<<"  "<<count<<"  "<<totalProba<<std::endl;
     name = tempName.c_str();
         histoData2.push_back(totalProba);
         nameData2.push_back(count);
-
 }
 
 void setupHisto()

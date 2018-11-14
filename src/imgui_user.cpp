@@ -2,7 +2,6 @@
 #include <iostream>
 #include <cstring>
 
-
   ImVec2 operator+(ImVec2 a, ImVec2 b){
     return ImVec2(a.x+b.x,a.y+b.y);
   }
@@ -90,7 +89,7 @@ namespace ImGui{
                 ImGui::PopStyleColor();
                 ImGui::PopID();
                 if(IsItemHovered())
-                  SetTooltip( "Chemin %i  \n + proba %f",listName[n],v1);
+                  SetTooltip( "Path %i  \n + proba %f",listName[n],v1);
           t0 = t1;
           tp0 = tp1;
       }

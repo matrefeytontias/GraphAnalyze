@@ -35,27 +35,26 @@ void HomeModule::render()
         ImGui::BeginGroup();  //module list begin
             ImGui::BeginGroup(); //first column
                 ImGui::BeginGroup(); //first module
-                    if(ImGui::Button("Graph",sizeButtonModule))
+                    if(ImGui::Button("Graph functions",sizeButtonModule))
                         (state)[0] = true;
                     ImGui::Text("Plot Graph and show \n information about it");
                 ImGui::EndGroup(); //end first module
                 ImGui::BeginGroup(); //second module
                     if(ImGui::Button("Module2",sizeButtonModule))
                         (state)[1]=true;
-                    ImGui::Text("Find root  \n ...");
                 ImGui::EndGroup(); //end second module
             ImGui::EndGroup();  //End first column
             ImGui::SameLine();
             ImGui::BeginGroup(); //2nd column
                 ImGui::BeginGroup(); //first module
-                    if(ImGui::Button("Diff eq",sizeButtonModule))
+                    if(ImGui::Button("Solve linear ODE",sizeButtonModule))
                         (state)[2]=true;
-                    ImGui::Text("Solve 1st order linear\ndifferential equations");
+                    ImGui::Text("         Solve linear\ndifferential equations");
                 ImGui::EndGroup(); //end first module
                 ImGui::BeginGroup(); //second module
-                    if(ImGui::Button("Proba Module",sizeButtonModule))
+                    if(ImGui::Button("Probabilities",sizeButtonModule))
                         (state)[3]=true;
-                    ImGui::Text("Compute & visuale proba ");
+                    ImGui::Text("Compute & visualize\n       probabilities");
                 ImGui::EndGroup(); //end second module
             ImGui::EndGroup();  //End 2nd column
         ImGui::EndGroup(); //module list end
